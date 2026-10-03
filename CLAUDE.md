@@ -1,6 +1,6 @@
 # ShuttleScore
 
-App Apple Watch (watchOS 27, autonome) de suivi de score de badminton en 3×15,
+App Apple Watch (watchOS 26 minimum, autonome) de suivi de score de badminton en 3×15,
 en simple et en double. Le périmètre, les règles métier et le découpage des
 features sont dans `SPEC.md` : c'est la référence, ne la recopie pas ici.
 
@@ -10,6 +10,8 @@ features sont dans `SPEC.md` : c'est la référence, ne la recopie pas ici.
 - `make format` : reformate le code en place.
 - `make project` : régénère `ShuttleScore.xcodeproj` depuis `project.yml`.
 - `make app` : build complet de l'app sur simulateur watchOS. Lent, tourne en CI.
+- `make ui-test` : tests de bout en bout XCUITest sur simulateur Apple Watch Ultra (~1 min). Lent, tourne en CI.
+  Les éléments testés sont repérés par `accessibilityIdentifier` (`match.half.me`, `match.undo`, …).
 
 ## Où vit quoi
 
@@ -18,6 +20,7 @@ features sont dans `SPEC.md` : c'est la référence, ne la recopie pas ici.
   et sont testées avec Swift Testing (`import Testing`).
 - `ShuttleScore/` : app watchOS en SwiftUI. Une UI fine qui appelle `ShuttleCore`.
   La persistance (SwiftData) et la séance HealthKit vivent aussi ici.
+- `ShuttleScoreUITests/` : tests de bout en bout du parcours principal.
 - `project.yml` : source de vérité du projet Xcode (XcodeGen).
 
 ## Pièges

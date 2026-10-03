@@ -4,7 +4,12 @@ name: ShuttleScore
 options:
   bundleIdPrefix: fr.kbosc
   deploymentTarget:
-    watchOS: "27.0"
+    watchOS: "26.0"
+settings:
+  base:
+    # Équipe personnelle (compte gratuit) de Kévin : signature automatique sur sa montre.
+    DEVELOPMENT_TEAM: Y3435Q8SZL
+    CODE_SIGN_STYLE: Automatic
 packages:
   ShuttleCore:
     path: ShuttleCore
@@ -24,3 +29,22 @@ targets:
         INFOPLIST_KEY_WKWatchOnly: YES
         INFOPLIST_KEY_WKApplication: YES
         SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+  ShuttleScoreUITests:
+    type: bundle.ui-testing
+    platform: watchOS
+    sources: [ShuttleScoreUITests]
+    dependencies:
+      - target: ShuttleScore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: fr.kbosc.ShuttleScoreUITests
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+schemes:
+  ShuttleScore:
+    build:
+      targets:
+        ShuttleScore: all
+    test:
+      targets: [ShuttleScoreUITests]

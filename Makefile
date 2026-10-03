@@ -1,6 +1,9 @@
-SOURCES := ShuttleCore ShuttleScore
+SOURCES := ShuttleCore ShuttleScore ShuttleScoreUITests
+# Premier simulateur Apple Watch Ultra disponible (sinon n'importe quelle Apple Watch).
+SIM_LIST := xcrun simctl list devices available
+WATCH_SIM ?= $(or $(shell $(SIM_LIST) | grep 'Apple Watch Ultra' | head -1 | grep -oE '[0-9A-F-]{36}'),$(shell $(SIM_LIST) | grep 'Apple Watch' | head -1 | grep -oE '[0-9A-F-]{36}'))
 
-.PHONY: verify format lint build test project app
+.PHONY: verify format lint build test project app ui-test
 
 ## verify : format + lint + typecheck + tests du domaine (< 1 min). À lancer avant chaque fin de tâche.
 verify: lint build test
@@ -26,3 +29,8 @@ project:
 app: project
 	xcodebuild build -project ShuttleScore.xcodeproj -scheme ShuttleScore \
 		-destination 'generic/platform=watchOS Simulator' -quiet
+
+## ui-test : tests de bout en bout sur simulateur watchOS (lent, lancé en CI)
+ui-test: project
+	xcodebuild test -project ShuttleScore.xcodeproj -scheme ShuttleScore \
+		-destination 'id=$(WATCH_SIM)' -quiet

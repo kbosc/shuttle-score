@@ -65,7 +65,7 @@ manipulation sur le simulateur ou la montre).
 
 | Choix | Raison |
 |---|---|
-| App **watchOS autonome**, SwiftUI, Swift 6 (concurrence stricte), cible watchOS 27 | Une app watchOS est forcément en Swift. Pas de compagnon iPhone, donc une seule UI. |
+| App **watchOS autonome**, SwiftUI, Swift 6 (concurrence stricte), cible watchOS 26 minimum (l’iPhone de Kévin est en iOS 26) | Une app watchOS est forcément en Swift. Pas de compagnon iPhone, donc une seule UI. |
 | **`ShuttleCore`**, Swift Package local, sans UI ni framework Apple | Porte toutes les règles métier. Ses tests tournent avec `swift test` sur le Mac en quelques secondes, sans simulateur. |
 | Score modélisé en **event sourcing** : réglages initiaux + liste des échanges, état calculé par une fonction pure | L'annulation revient à retirer le dernier échange. Le journal est exactement ce que demandent les stats futures. Il n'y a pas d'état incohérent possible. |
 | **SwiftData** pour la persistance | API native. Les données survivent au redémarrage, pas à une désinstallation (accepté). |

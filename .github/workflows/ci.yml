@@ -25,3 +25,4 @@ jobs:
           xcode-version: latest-stable
       - run: brew install xcodegen
       - run: make app
+      - run: make ui-test
