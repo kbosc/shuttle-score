@@ -25,7 +25,7 @@ private func match(firstServer: Side = .me, _ points: [Side], rules: ScoringRule
         let state = Match(firstServer: .opponent).state
         #expect(state.currentGame == GameScore(me: 0, opponent: 0))
         #expect(state.completedGames.isEmpty)
-        #expect(state.server == .opponent)
+        #expect(state.servingSide == .opponent)
         #expect(state.serviceCourt == .right)
         #expect(state.winner == nil)
     }
@@ -80,7 +80,7 @@ private func match(firstServer: Side = .me, _ points: [Side], rules: ScoringRule
         #expect(state.winner == .me)
         #expect(state.isOver)
         #expect(state.completedGames.count == 2)
-        #expect(state.server == nil)
+        #expect(state.servingSide == nil)
         #expect(state.serviceCourt == nil)
     }
 
@@ -108,13 +108,13 @@ private func match(firstServer: Side = .me, _ points: [Side], rules: ScoringRule
 
 @Suite struct SinglesService {
     @Test func theRallyWinnerServesNext() {
-        #expect(match(firstServer: .me, [.opponent]).state.server == .opponent)
-        #expect(match(firstServer: .opponent, [.opponent, .me]).state.server == .me)
+        #expect(match(firstServer: .me, [.opponent]).state.servingSide == .opponent)
+        #expect(match(firstServer: .opponent, [.opponent, .me]).state.servingSide == .me)
     }
 
     @Test func serverIsOnTheLeftWhenTheirScoreIsOdd() {
         let state = match(firstServer: .me, [.me]).state
-        #expect(state.server == .me)
+        #expect(state.servingSide == .me)
         #expect(state.serviceCourt == .left)
     }
 
@@ -122,7 +122,7 @@ private func match(firstServer: Side = .me, _ points: [Side], rules: ScoringRule
         // Moi 5 - 3 Adv, je gagne le point (6-3) : je sers, à droite.
         let state = match(rallies(me: 5, opponent: 3) + [.me]).state
         #expect(state.currentGame == GameScore(me: 6, opponent: 3))
-        #expect(state.server == .me)
+        #expect(state.servingSide == .me)
         #expect(state.serviceCourt == .right)
     }
 
@@ -130,14 +130,14 @@ private func match(firstServer: Side = .me, _ points: [Side], rules: ScoringRule
         // Moi 6 - 3 Adv, l'adversaire gagne (6-4) : l'adversaire sert, à droite.
         let state = match(rallies(me: 6, opponent: 3) + [.opponent]).state
         #expect(state.currentGame == GameScore(me: 6, opponent: 4))
-        #expect(state.server == .opponent)
+        #expect(state.servingSide == .opponent)
         #expect(state.serviceCourt == .right)
     }
 
     @Test func theGameWinnerServesFirstInTheNextGameFromTheRight() {
         let state = match(firstServer: .me, rallies(me: 13, opponent: 15)).state
         #expect(state.currentGame == GameScore(me: 0, opponent: 0))
-        #expect(state.server == .opponent)
+        #expect(state.servingSide == .opponent)
         #expect(state.serviceCourt == .right)
     }
 }
@@ -147,7 +147,7 @@ private func match(firstServer: Side = .me, _ points: [Side], rules: ScoringRule
         var m = match(firstServer: .me, [.me, .opponent])
         m.undo()
         #expect(m.state.currentGame == GameScore(me: 1, opponent: 0))
-        #expect(m.state.server == .me)
+        #expect(m.state.servingSide == .me)
         #expect(m.state.serviceCourt == .left)
     }
 

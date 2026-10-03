@@ -10,17 +10,36 @@ struct ShuttleScoreApp: App {
     }
 }
 
-/// Choix du premier serveur, puis match. Rien n'est persisté : quitter l'app perd le match.
+/// Réglage du match, puis match. Rien n'est persisté : quitter l'app perd le match.
 struct RootView: View {
     @State private var match: Match?
+    /// Format à reprendre quand on annule avant le premier point (mauvais premier service).
+    @State private var setupFormat: MatchFormat?
 
     var body: some View {
         if let current = match {
-            MatchView(
-                match: Binding(get: { current }, set: { match = $0 }),
-                onNewMatch: { match = nil })
+            let binding = Binding(get: { current }, set: { match = $0 })
+            if let side = current.state.awaitingServiceChoice {
+                // En double, au début de chaque set à partir du 2e.
+                ServiceChoiceView(
+                    title: "Set \(current.state.completedGames.count + 1)",
+                    servers: Player.players(of: side, in: .doubles),
+                    onChoose: { binding.wrappedValue.chooseService($0) },
+                    onUndo: { binding.wrappedValue.undo() })
+            } else {
+                MatchView(
+                    match: binding,
+                    onUndoFirstService: {
+                        setupFormat = current.format
+                        match = nil
+                    },
+                    onNewMatch: {
+                        setupFormat = nil
+                        match = nil
+                    })
+            }
         } else {
-            SetupView { firstServer in match = Match(firstServer: firstServer) }
+            SetupView(initialFormat: setupFormat) { match = $0 }
         }
     }
 }

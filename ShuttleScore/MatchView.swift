@@ -5,18 +5,27 @@ import WatchKit
 /// Écran de match : la moitié haute donne le point à l'adversaire, la moitié basse à moi.
 struct MatchView: View {
     @Binding var match: Match
+    /// Annuler avant le premier point : retour au choix du premier service.
+    let onUndoFirstService: () -> Void
     let onNewMatch: () -> Void
 
     var body: some View {
         let state = match.state
         VStack(spacing: 0) {
-            SideHalf(side: .opponent, name: "Adversaire", state: state) { score(.opponent) }
+            SideHalf(side: .opponent, format: match.format, state: state) { score(.opponent) }
             CenterBar(
-                state: state, canUndo: !match.rallies.isEmpty, undo: { match.undo() },
-                onNewMatch: onNewMatch)
-            SideHalf(side: .me, name: "Moi", state: state) { score(.me) }
+                state: state, undo: undo, onNewMatch: onNewMatch)
+            SideHalf(side: .me, format: match.format, state: state) { score(.me) }
         }
         .ignoresSafeArea(edges: .bottom)
+    }
+
+    private func undo() {
+        if match.events.isEmpty {
+            onUndoFirstService()
+        } else {
+            match.undo()
+        }
     }
 
     private func score(_ side: Side) {
@@ -27,11 +36,11 @@ struct MatchView: View {
 
 private struct SideHalf: View {
     let side: Side
-    let name: String
+    let format: MatchFormat
     let state: MatchState
     let action: () -> Void
 
-    private var isServing: Bool { state.server == side }
+    private var isServing: Bool { state.servingSide == side }
     /// La moitié qui sert est allumée ; en fin de match, celle du vainqueur.
     private var isHighlighted: Bool { isServing || state.winner == side }
 
@@ -42,6 +51,11 @@ private struct SideHalf: View {
                     .font(.system(size: 44, weight: .bold, design: .rounded))
                     .monospacedDigit()
                     .accessibilityIdentifier("match.score.\(side.identifier)")
+                // En double, le nom du serveur passe au-dessus de sa case.
+                if isServing, format == .doubles, let server = state.server {
+                    Text(server.name(in: format))
+                        .font(.caption2.weight(.bold))
+                }
                 HStack(spacing: 4) {
                     if isServing {
                         Image(systemName: "figure.badminton")
@@ -70,15 +84,17 @@ private struct SideHalf: View {
         if state.isOver {
             return state.completedGames.map { "\($0[side])" }.joined(separator: " · ")
         }
-        guard isServing, let court = state.serviceCourt else { return name }
-        // La couleur et la position disent déjà qui sert : on garde la place pour la case.
+        guard isServing, let court = state.serviceCourt else {
+            return Player.players(of: side, in: format).map { $0.name(in: format) }
+                .joined(separator: " · ")
+        }
+        // La couleur et la position disent déjà quel camp sert : on garde la place pour la case.
         return "Sert \(court == .right ? "à droite" : "à gauche")"
     }
 }
 
 private struct CenterBar: View {
     let state: MatchState
-    let canUndo: Bool
     let undo: () -> Void
     let onNewMatch: () -> Void
 
@@ -91,7 +107,6 @@ private struct CenterBar: View {
                     .background(Color.gray.opacity(0.35), in: Capsule())
                     .contentShape(Capsule())
             }
-            .disabled(!canUndo)
             .accessibilityLabel("Annuler le dernier point")
             .accessibilityIdentifier("match.undo")
 
@@ -149,5 +164,5 @@ extension Side {
 
 #Preview("En cours") {
     @Previewable @State var match = Match(firstServer: .me)
-    MatchView(match: $match, onNewMatch: {})
+    MatchView(match: $match, onUndoFirstService: {}, onNewMatch: {})
 }

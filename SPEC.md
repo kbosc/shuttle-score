@@ -142,11 +142,16 @@ HealthKit est bien signé avec une équipe personnelle au premier déploiement.
 
 ### Annulation
 
-- Annuler revient à retirer le dernier échange du journal et à recalculer l'état.
-  Cela peut rouvrir un set terminé, ou un match terminé.
-- En double, annuler le premier échange d'un set ramène au choix serveur et
-  receveur de ce set.
-- Annuler sur un match sans échange ne fait rien.
+- Annuler revient à retirer la dernière entrée du journal (un échange, ou un
+  choix de service) et à recalculer l'état. Cela peut rouvrir un set terminé, ou
+  un match terminé.
+- En double, à partir du 2e set : annuler le premier échange ramène à 0-0 avec le
+  service choisi ; annuler encore ramène au choix serveur et receveur ; annuler
+  encore rouvre le set précédent. L'écran de choix propose donc aussi l'annulation,
+  car un tap raté a pu terminer le set.
+- Annuler avant le tout premier échange du match ramène à l'écran de choix du
+  premier service, dans le même format (un mauvais premier serveur se corrige
+  donc sans quitter l'app).
 
 ### Joueurs
 
