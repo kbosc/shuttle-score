@@ -1,0 +1,9 @@
+.DS_Store
+# Généré par XcodeGen depuis project.yml
+*.xcodeproj
+# SwiftPM / Xcode
+.build/
+.swiftpm/
+DerivedData/
+xcuserdata/
+*.xcuserstate

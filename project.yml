@@ -1,0 +1,26 @@
+# Source de vérité du projet Xcode. Le .xcodeproj est généré (`make project`)
+# et n'est pas versionné.
+name: ShuttleScore
+options:
+  bundleIdPrefix: fr.kbosc
+  deploymentTarget:
+    watchOS: "27.0"
+packages:
+  ShuttleCore:
+    path: ShuttleCore
+targets:
+  ShuttleScore:
+    type: application
+    platform: watchOS
+    sources: [ShuttleScore]
+    dependencies:
+      - package: ShuttleCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: fr.kbosc.ShuttleScore
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: ShuttleScore
+        INFOPLIST_KEY_WKWatchOnly: YES
+        INFOPLIST_KEY_WKApplication: YES
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
