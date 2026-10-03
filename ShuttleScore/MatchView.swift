@@ -83,34 +83,54 @@ private struct CenterBar: View {
     let onNewMatch: () -> Void
 
     var body: some View {
-        HStack {
+        HStack(spacing: 6) {
             Button(action: undo) {
                 Image(systemName: "arrow.uturn.backward")
+                    .font(.body.weight(.semibold))
+                    .frame(minWidth: Self.target.width, minHeight: Self.target.height)
+                    .background(Color.gray.opacity(0.35), in: Capsule())
+                    .contentShape(Capsule())
             }
             .disabled(!canUndo)
             .accessibilityLabel("Annuler le dernier point")
             .accessibilityIdentifier("match.undo")
 
-            Spacer()
             if let winner = state.winner {
                 Text(winner == .me ? "Gagné" : "Perdu")
                     .font(.headline)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                    .frame(maxWidth: .infinity)
                     .accessibilityIdentifier("match.result")
-                Spacer()
-                Button("Nouveau", action: onNewMatch)
-                    .accessibilityIdentifier("match.new")
+                Button(action: onNewMatch) {
+                    Text("Nouveau")
+                        .font(.footnote.weight(.semibold))
+                        .fixedSize()
+                        .padding(.horizontal, 8)
+                        .frame(minHeight: Self.target.height)
+                        .background(Color.gray.opacity(0.35), in: Capsule())
+                        .contentShape(Capsule())
+                }
+                .accessibilityIdentifier("match.new")
             } else {
                 Text("Sets \(state.gamesWon(by: .me)) – \(state.gamesWon(by: .opponent))")
                     .font(.footnote)
                     .monospacedDigit()
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity)
                     .accessibilityIdentifier("match.games")
-                Spacer()
             }
         }
-        .buttonStyle(.borderless)
-        .padding(.horizontal, 8)
-        .frame(height: 28)
+        .buttonStyle(.plain)
+        .padding(.horizontal, 6)
+        // Marge morte autour des boutons : un tap un peu à côté ne marque pas de point.
+        .padding(.vertical, 4)
+        .frame(height: Self.target.height + 8)
+        .background(Color.black)
     }
+
+    /// Cible minimale d'un bouton au doigt (recommandation Apple : 44 pt).
+    private static let target = CGSize(width: 64, height: 44)
 }
 
 extension Color {

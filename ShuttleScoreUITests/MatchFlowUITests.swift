@@ -30,6 +30,20 @@ final class MatchFlowUITests: XCTestCase {
         XCTAssertTrue(me.label.contains("Sert à droite"))
     }
 
+    /// Le bouton d'annulation doit être une vraie cible de doigt (44 pt, recommandation Apple),
+    /// sinon on le rate et on marque un point dans la moitié voisine.
+    @MainActor
+    func testUndoButtonIsLargeEnoughToHitWithAFinger() {
+        let app = XCUIApplication()
+        app.launch()
+        app.buttons["setup.firstServer.me"].tap()
+
+        let undo = app.buttons["match.undo"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 5))
+        XCTAssertGreaterThanOrEqual(undo.frame.height, 44)
+        XCTAssertGreaterThanOrEqual(undo.frame.width, 60)
+    }
+
     /// En fin de match, les sets gagnés et le score de chaque set restent affichés.
     @MainActor
     func testFinalScoreStaysVisibleAfterTheMatch() {

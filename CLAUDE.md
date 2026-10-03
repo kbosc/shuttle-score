@@ -42,3 +42,8 @@ features sont dans `SPEC.md` : c'est la référence, ne la recopie pas ici.
   (iCloud, push).
 - Le format doit rester paramétré par `ScoringRules` : n'écris jamais 15, 21 ou 8
   en dur dans le moteur.
+- Quand la vraie montre de Kévin est connectée à Xcode, `xcodebuild test` peut ne
+  jamais rendre la main une fois les tests finis : surveille la ligne
+  `Test Suite 'All tests' passed|failed` dans la sortie plutôt que d'attendre la fin.
+- Les boutons secondaires (annuler, nouveau) font au moins 44 pt de haut : en match,
+  un tap raté tombe dans une moitié de score et ajoute un point.
