@@ -35,7 +35,8 @@ manipulation sur le simulateur ou la montre).
 6. **Signaler** par un retour haptique et un message la pause à 8 points, ainsi
    que le changement de côté à 8 points au 3e set.
 7. **Séance HealthKit « Badminton »** pendant tout le match : elle démarre avec le
-   match et s'arrête à sa fin. L'app reste ainsi au premier plan. Si l'accès à
+   match et se termine quand on quitte le match (détail dans Règles métier,
+   « Séance HealthKit »). L'app reste ainsi au premier plan. Si l'accès à
    HealthKit est refusé, le match se joue quand même, sans séance.
 8. **Sauvegarder** chaque match sur la montre (SwiftData) : joueurs, règles,
    journal de chaque échange (gagnant, serveur, horodatage) et statut (`terminé`
@@ -152,6 +153,15 @@ HealthKit est bien signé avec une équipe personnelle au premier déploiement.
 - Annuler avant le tout premier échange du match ramène à l'écran de choix du
   premier service, dans le même format (un mauvais premier serveur se corrige
   donc sans quitter l'app).
+
+### Séance HealthKit
+
+- Elle démarre avec le match. La demande d'accès à Santé n'apparaît qu'au premier match.
+- Elle est mise en pause quand le match se termine, et reprend si une annulation
+  rouvre le match (un tap raté sur le dernier point ne la casse pas).
+- Elle se termine quand on quitte le match (« Nouveau ») : enregistrée dans Santé
+  si au moins un point a été joué, jetée sinon (annulation avant le premier point).
+- Accès refusé ou HealthKit indisponible : le match se joue normalement, sans séance.
 
 ### Joueurs
 

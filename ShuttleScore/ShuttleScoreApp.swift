@@ -15,8 +15,20 @@ struct RootView: View {
     @State private var match: Match?
     /// Format à reprendre quand on annule avant le premier point (mauvais premier service).
     @State private var setupFormat: MatchFormat?
+    /// Séance HealthKit du match ; factice pendant les tests UI.
+    @State private var workout = WorkoutTracker(
+        session: ProcessInfo.processInfo.arguments.contains("-UITests")
+            ? NoWorkoutSession() : HealthKitWorkoutSession())
 
     var body: some View {
+        content
+            // Pause de la séance à la fin du match, reprise si une annulation le rouvre.
+            .onChange(of: match?.state.isOver) { _, isOver in
+                if let isOver { workout.matchChanged(isOver: isOver) }
+            }
+    }
+
+    @ViewBuilder private var content: some View {
         if let current = match {
             let binding = Binding(get: { current }, set: { match = $0 })
             if let side = current.state.awaitingServiceChoice {
@@ -31,15 +43,23 @@ struct RootView: View {
                     match: binding,
                     onUndoFirstService: {
                         setupFormat = current.format
-                        match = nil
+                        leave(current)
                     },
                     onNewMatch: {
                         setupFormat = nil
-                        match = nil
+                        leave(current)
                     })
             }
         } else {
-            SetupView(initialFormat: setupFormat) { match = $0 }
+            SetupView(initialFormat: setupFormat) { newMatch in
+                match = newMatch
+                Task { await workout.matchStarted() }
+            }
         }
+    }
+
+    private func leave(_ current: Match) {
+        match = nil
+        Task { await workout.matchLeft(hadRallies: !current.events.isEmpty) }
     }
 }

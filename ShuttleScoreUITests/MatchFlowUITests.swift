@@ -4,8 +4,7 @@ import XCTest
 final class MatchFlowUITests: XCTestCase {
     @MainActor
     func testScoringAndUndo() {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchApp()
 
         app.buttons["setup.format.singles"].tap()
         app.buttons["setup.firstServer.me"].tap()
@@ -35,8 +34,7 @@ final class MatchFlowUITests: XCTestCase {
     /// sinon on le rate et on marque un point dans la moitié voisine.
     @MainActor
     func testUndoButtonIsLargeEnoughToHitWithAFinger() {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchApp()
         app.buttons["setup.format.singles"].tap()
         app.buttons["setup.firstServer.me"].tap()
 
@@ -49,8 +47,7 @@ final class MatchFlowUITests: XCTestCase {
     /// En fin de match, les sets gagnés et le score de chaque set restent affichés.
     @MainActor
     func testFinalScoreStaysVisibleAfterTheMatch() {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchApp()
         app.buttons["setup.format.singles"].tap()
         app.buttons["setup.firstServer.me"].tap()
 
@@ -77,8 +74,7 @@ final class MatchFlowUITests: XCTestCase {
     /// Double : choix du service au set 1, rotation, puis nouveau choix au set 2.
     @MainActor
     func testDoublesServiceRotationAndNextGameChoice() {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchApp()
         app.buttons["setup.format.doubles"].tap()
         app.buttons["choice.server.me"].tap()
         app.buttons["choice.receiver.opponent1"].tap()
@@ -121,8 +117,7 @@ final class MatchFlowUITests: XCTestCase {
     /// ramène au choix du service, dans le même format.
     @MainActor
     func testUndoBeforeTheFirstPointGoesBackToTheFirstServiceChoice() {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchApp()
         app.buttons["setup.format.doubles"].tap()
         app.buttons["choice.server.opponent1"].tap()
         app.buttons["choice.receiver.me"].tap()
@@ -142,11 +137,19 @@ final class MatchFlowUITests: XCTestCase {
     /// Depuis le choix du serveur en simple, on peut revenir au choix simple ou double.
     @MainActor
     func testSinglesSetupCanGoBackToTheFormatChoice() {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchApp()
         app.buttons["setup.format.singles"].tap()
         app.buttons["setup.back"].tap()
         XCTAssertTrue(app.buttons["setup.format.doubles"].waitForExistence(timeout: 5))
+    }
+
+    /// Lance l'app avec une séance factice : la demande d'accès HealthKit bloquerait l'écran.
+    @MainActor
+    private func launchApp() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UITests"]
+        app.launch()
+        return app
     }
 
     /// Capture gardée dans le .xcresult, pour relire le rendu sans lancer l'app.

@@ -47,3 +47,12 @@ features sont dans `SPEC.md` : c'est la référence, ne la recopie pas ici.
   `Test Suite 'All tests' passed|failed` dans la sortie plutôt que d'attendre la fin.
 - Les boutons secondaires (annuler, nouveau) font au moins 44 pt de haut : en match,
   un tap raté tombe dans une moitié de score et ajoute un point.
+- Les clés Info.plist de type tableau (`WKBackgroundModes`) ne passent pas par
+  `INFOPLIST_KEY_*` : elles vont dans `info.properties` de `project.yml`. `make app`
+  vérifie que le mode `workout-processing` est bien présent.
+- Les tests UI lancent l'app avec `-UITests` : la séance HealthKit est alors
+  remplacée par une séance factice, sinon la demande d'accès bloquerait l'écran.
+  La vraie séance ne se vérifie que sur la montre.
+- La logique de la séance (quand démarrer, mettre en pause, terminer) vit dans
+  `ShuttleCore/WorkoutTracker.swift`, derrière le protocole `WorkoutSession` ;
+  seul `HealthKitWorkoutSession` importe HealthKit.

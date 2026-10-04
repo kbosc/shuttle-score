@@ -20,6 +20,18 @@ targets:
     sources: [ShuttleScore]
     dependencies:
       - package: ShuttleCore
+      - sdk: HealthKit.framework
+    info:
+      # Les tableaux (ici le mode arrière-plan « workout ») ne passent pas par INFOPLIST_KEY_* :
+      # ils vont dans ce plist, fusionné avec les clés générées.
+      path: ShuttleScore/Info.plist
+      properties:
+        WKBackgroundModes: [workout-processing]
+    entitlements:
+      path: ShuttleScore/ShuttleScore.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: fr.kbosc.ShuttleScore
@@ -28,6 +40,8 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: ShuttleScore
         INFOPLIST_KEY_WKWatchOnly: YES
         INFOPLIST_KEY_WKApplication: YES
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "ShuttleScore lit ta fréquence cardiaque et tes calories pendant le match."
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "ShuttleScore enregistre tes matchs comme séances de badminton dans Santé."
         SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
   ShuttleScoreUITests:
     type: bundle.ui-testing
