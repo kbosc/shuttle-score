@@ -51,20 +51,29 @@ private struct SideHalf: View {
                     .font(.system(size: 44, weight: .bold, design: .rounded))
                     .monospacedDigit()
                     .accessibilityIdentifier("match.score.\(side.identifier)")
-                // En double, le nom du serveur passe au-dessus de sa case.
-                if isServing, format == .doubles, let server = state.server {
-                    Text(server.name(in: format))
-                        .font(.caption2.weight(.bold))
-                }
-                HStack(spacing: 4) {
-                    if isServing {
-                        Image(systemName: "figure.badminton")
+                if state.isOver {
+                    Text(setScores)
+                        .font(.caption2)
+                } else {
+                    // Les deux cases du camp, dans l'ordre où je les vois depuis ma place.
+                    HStack(spacing: 0) {
+                        ForEach(Array(side.courtsSeenFromMe.enumerated()), id: \.offset) {
+                            index, court in
+                            CourtSlot(
+                                player: state.player(of: side, in: court), state: state,
+                                format: format
+                            )
+                            .frame(maxWidth: .infinity)
+                            .accessibilityIdentifier(
+                                "match.court.\(side.identifier).\(index == 0 ? "screenLeft" : "screenRight")"
+                            )
+                        }
                     }
-                    Text(caption)
                 }
-                .font(.caption2.weight(isServing ? .bold : .regular))
             }
-            .foregroundStyle(isHighlighted ? Color.black : Color.secondary)
+            // Moitié du bas : les noms s'écartent du bord arrondi de l'écran.
+            .padding(.bottom, side == .me ? 12 : 0)
+            .foregroundStyle(isHighlighted ? Color.black : Color.white.opacity(0.85))
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(isHighlighted ? Color.serving : Color.gray.opacity(0.15))
             .contentShape(Rectangle())
@@ -80,16 +89,39 @@ private struct SideHalf: View {
         state.isOver ? state.gamesWon(by: side) : state.currentGame[side]
     }
 
-    private var caption: String {
-        if state.isOver {
-            return state.completedGames.map { "\($0[side])" }.joined(separator: " · ")
+    /// En fin de match : les points de ce camp, set par set.
+    private var setScores: String {
+        state.completedGames.map { "\($0[side])" }.joined(separator: " · ")
+    }
+}
+
+/// Une case du terrain : le joueur qui s'y tient, en gras avec l'icône s'il sert,
+/// souligné s'il reçoit. Vide en simple pour la case inoccupée.
+private struct CourtSlot: View {
+    let player: Player?
+    let state: MatchState
+    let format: MatchFormat
+
+    var body: some View {
+        if let player {
+            let isServer = state.server == player
+            let isReceiver = state.receiver == player
+            HStack(spacing: 2) {
+                if isServer {
+                    Image(systemName: "figure.badminton")
+                }
+                Text(player.name(in: format))
+                    .fontWeight(isServer ? .bold : .regular)
+                    .underline(isReceiver)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            .font(.footnote)
+            .accessibilityElement(children: .combine)
+            .accessibilityValue(isServer ? "sert" : isReceiver ? "reçoit" : "")
+        } else {
+            Color.clear.frame(height: 1)
         }
-        guard isServing, let court = state.serviceCourt else {
-            return Player.players(of: side, in: format).map { $0.name(in: format) }
-                .joined(separator: " · ")
-        }
-        // La couleur et la position disent déjà quel camp sert : on garde la place pour la case.
-        return "Sert \(court == .right ? "à droite" : "à gauche")"
     }
 }
 

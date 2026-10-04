@@ -12,9 +12,20 @@ public enum Side: Equatable, Sendable {
 }
 
 /// Case de service, vue depuis le joueur qui sert.
-public enum ServiceCourt: Equatable, Sendable {
+public enum ServiceCourt: Hashable, Sendable {
     case right
     case left
+}
+
+extension Side {
+    /// Cases du camp dans l'ordre où je les vois, de gauche à droite, depuis ma place.
+    /// Les adversaires me font face : leur case droite est à ma gauche.
+    public var courtsSeenFromMe: [ServiceCourt] {
+        switch self {
+        case .me: [.left, .right]
+        case .opponent: [.right, .left]
+        }
+    }
 }
 
 /// Score d'un set.
@@ -102,9 +113,17 @@ public struct MatchState: Equatable, Sendable {
     /// En double, au début d'un set : le camp qui doit choisir son serveur
     /// (le gagnant du set précédent). Aucun point n'est accepté tant qu'il est renseigné.
     public let awaitingServiceChoice: Side?
+    /// Qui occupe chaque case, vue depuis son propre camp. Vide hors d'un set
+    /// (service à choisir, match terminé). En simple, un camp n'occupe qu'une case.
+    public let positions: [Side: [ServiceCourt: Player]]
     public let winner: Side?
 
     public var isOver: Bool { winner != nil }
+
+    /// Joueur placé dans la case `court` (vue depuis son camp), s'il y en a un.
+    public func player(of side: Side, in court: ServiceCourt) -> Player? {
+        positions[side]?[court]
+    }
 
     public func gamesWon(by side: Side) -> Int {
         completedGames.filter { $0[side] > $0[side.opposite] }.count
@@ -186,7 +205,8 @@ public struct Match: Sendable {
         return MatchState(
             completedGames: completedGames, currentGame: game, servingSide: service?.server.side,
             server: service?.server, receiver: service?.receiver, serviceCourt: service?.court,
-            awaitingServiceChoice: awaiting, winner: winner)
+            awaitingServiceChoice: awaiting, positions: rotation?.positions(score: game) ?? [:],
+            winner: winner)
     }
 
     /// Ignoré si le match est terminé ou si le service du set reste à choisir.
@@ -242,6 +262,16 @@ private struct Rotation {
         let court: ServiceCourt = score[server.side].isMultiple(of: 2) ? .right : .left
         let receivingRight = rightCourt[server.side.opposite] ?? server.singlesOpponent
         return (server, court, court == .right ? receivingRight : teammate(of: receivingRight))
+    }
+
+    /// Qui occupe chaque case. En simple, chaque joueur se tient dans la case de service :
+    /// le receveur est en diagonale, donc dans la case du même nom vue depuis son camp.
+    func positions(score: GameScore) -> [Side: [ServiceCourt: Player]] {
+        let (server, court, receiver) = service(score: score)
+        if format == .singles {
+            return [server.side: [court: server], receiver.side: [court: receiver]]
+        }
+        return rightCourt.mapValues { [.right: $0, .left: $0.teammate] }
     }
 
     /// En simple, chaque camp n'a qu'un joueur : il couvre les deux cases, personne ne permute.

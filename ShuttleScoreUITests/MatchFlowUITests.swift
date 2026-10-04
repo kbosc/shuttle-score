@@ -15,19 +15,23 @@ final class MatchFlowUITests: XCTestCase {
         let opponentScore = app.staticTexts["match.score.opponent"]
 
         XCTAssertTrue(me.waitForExistence(timeout: 5))
-        XCTAssertTrue(me.label.contains("Sert à droite"))
+        // Je sers depuis ma droite ; il reçoit depuis sa droite, qui est à ma gauche.
+        expectCourt(app, "me", "screenRight", "Moi", "sert")
+        expectCourt(app, "opponent", "screenLeft", "Adversaire", "reçoit")
 
         me.tap()
         me.tap()
         opponent.tap()
         XCTAssertEqual(myScore.label, "2")
         XCTAssertEqual(opponentScore.label, "1")
-        XCTAssertTrue(opponent.label.contains("Sert à gauche"))
+        // 2-1 : il sert depuis sa gauche (1 impair), donc à ma droite ; je reçois à ma gauche.
+        expectCourt(app, "opponent", "screenRight", "Adversaire", "sert")
+        expectCourt(app, "me", "screenLeft", "Moi", "reçoit")
         attachScreenshot(named: "En cours, 2-1", of: app)
 
         app.buttons["match.undo"].tap()
         XCTAssertEqual(opponentScore.label, "0")
-        XCTAssertTrue(me.label.contains("Sert à droite"))
+        expectCourt(app, "me", "screenRight", "Moi", "sert")
     }
 
     /// Le bouton d'annulation doit être une vraie cible de doigt (44 pt, recommandation Apple),
@@ -82,15 +86,21 @@ final class MatchFlowUITests: XCTestCase {
         let me = app.buttons["match.half.me"]
         let opponent = app.buttons["match.half.opponent"]
         XCTAssertTrue(me.waitForExistence(timeout: 5))
-        XCTAssertTrue(me.label.contains("Moi"))
-        XCTAssertTrue(me.label.contains("Sert à droite"))
+        // Départ : M à ma droite, P à ma gauche ; A1 à sa droite (ma gauche), A2 à ma droite.
+        expectCourt(app, "me", "screenRight", "Moi", "sert")
+        expectCourt(app, "me", "screenLeft", "Partenaire", "")
+        expectCourt(app, "opponent", "screenLeft", "Adv. 1", "reçoit")
+        expectCourt(app, "opponent", "screenRight", "Adv. 2", "")
 
-        // Exemple de SPEC.md : M gagne (M ressert à gauche), puis perd (A2 sert à gauche).
+        // Exemple de SPEC.md : M gagne (on permute, M ressert de la gauche)…
         me.tap()
-        XCTAssertTrue(me.label.contains("Sert à gauche"))
+        expectCourt(app, "me", "screenLeft", "Moi", "sert")
+        expectCourt(app, "me", "screenRight", "Partenaire", "")
+        expectCourt(app, "opponent", "screenRight", "Adv. 2", "reçoit")
+        // … puis perd : personne ne bouge, A2 sert de sa gauche (à ma droite), je reçois.
         opponent.tap()
-        XCTAssertTrue(opponent.label.contains("Adv. 2"))
-        XCTAssertTrue(opponent.label.contains("Sert à gauche"))
+        expectCourt(app, "opponent", "screenRight", "Adv. 2", "sert")
+        expectCourt(app, "me", "screenLeft", "Moi", "reçoit")
         attachScreenshot(named: "Double, A2 sert", of: app)
 
         // Je gagne le set 1 (15-1) : le set 2 demande mon serveur.
@@ -108,8 +118,8 @@ final class MatchFlowUITests: XCTestCase {
         partner.tap()
         app.buttons["choice.receiver.opponent2"].tap()
         XCTAssertTrue(me.waitForExistence(timeout: 5))
-        XCTAssertTrue(me.label.contains("Partenaire"))
-        XCTAssertTrue(me.label.contains("Sert à droite"))
+        expectCourt(app, "me", "screenRight", "Partenaire", "sert")
+        expectCourt(app, "opponent", "screenLeft", "Adv. 2", "reçoit")
         XCTAssertEqual(app.staticTexts["match.games"].label, "Sets 1 – 0")
     }
 
@@ -130,8 +140,7 @@ final class MatchFlowUITests: XCTestCase {
         app.buttons["choice.server.me"].tap()
         app.buttons["choice.receiver.opponent1"].tap()
         XCTAssertTrue(app.buttons["match.half.me"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["match.half.me"].label.contains("Moi"))
-        XCTAssertTrue(app.buttons["match.half.me"].label.contains("Sert à droite"))
+        expectCourt(app, "me", "screenRight", "Moi", "sert")
     }
 
     /// Depuis le choix du serveur en simple, on peut revenir au choix simple ou double.
@@ -141,6 +150,18 @@ final class MatchFlowUITests: XCTestCase {
         app.buttons["setup.format.singles"].tap()
         app.buttons["setup.back"].tap()
         XCTAssertTrue(app.buttons["setup.format.doubles"].waitForExistence(timeout: 5))
+    }
+
+    /// Vérifie qui occupe une case, vue depuis ma place, et son rôle (« sert », « reçoit » ou rien).
+    @MainActor
+    private func expectCourt(
+        _ app: XCUIApplication, _ side: String, _ screenPosition: String, _ name: String,
+        _ role: String, file: StaticString = #filePath, line: UInt = #line
+    ) {
+        let slot = app.descendants(matching: .any)["match.court.\(side).\(screenPosition)"]
+        XCTAssertTrue(slot.waitForExistence(timeout: 2), file: file, line: line)
+        XCTAssertEqual(slot.label, name, file: file, line: line)
+        XCTAssertEqual(slot.value as? String ?? "", role, file: file, line: line)
     }
 
     /// Lance l'app avec une séance factice : la demande d'accès HealthKit bloquerait l'écran.

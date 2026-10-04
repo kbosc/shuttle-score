@@ -25,8 +25,9 @@ manipulation sur le simulateur ou la montre).
    double, qui reçoit en premier.
 2. **Saisir un point** en tapant la moitié basse de l'écran (mon camp) ou la
    moitié haute (le camp adverse). Chaque moitié couvre la moitié de l'écran.
-3. **Afficher** le score du set en cours, les sets gagnés de chaque camp, le joueur
-   qui sert et sa case (droite ou gauche).
+3. **Afficher** le score du set en cours, les sets gagnés de chaque camp, et la
+   position de chaque joueur sur le terrain, vue depuis ma place : serveur mis en
+   évidence, receveur souligné (voir Règles métier, « Positions à l'écran »).
 4. **Annuler** le dernier point, sans limite jusqu'au début du match, y compris
    au-delà d'une fin de set.
 5. **Appliquer les règles 3×15** (voir Règles métier) : fin de set, fin de match.
@@ -140,6 +141,17 @@ HealthKit est bien signé avec une équipe personnelle au premier déploiement.
 - Entre deux sets, le camp qui a gagné le set sert en premier. Comme il peut
   choisir son serveur et le camp adverse son receveur, la montre **redemande**
   serveur et receveur au début de chaque set.
+
+### Positions à l'écran
+
+- Chaque moitié de l'écran montre les cases de son camp, vues depuis ma place :
+  je regarde les adversaires, donc leur case droite apparaît à ma gauche.
+  - Moi à droite, Partenaire à gauche : en bas, « Partenaire » à gauche, « Moi » à droite.
+  - Adv. 1 à droite, Adv. 2 à gauche (vu de leur camp) : en haut, « Adv. 1 » à
+    gauche, « Adv. 2 » à droite.
+- En simple, chaque joueur se tient dans la case de service (parité du score du
+  serveur) ; l'autre case de son camp reste vide.
+- Le serveur est en gras avec l'icône, le receveur est souligné.
 
 ### Annulation
 
