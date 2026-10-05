@@ -50,9 +50,8 @@ struct SetupView: View {
                 }
             }
         case .doubles:
-            ServiceChoiceView(
-                title: "Set 1", servers: Player.allCases,
-                onChoose: { onStart(Match(doublesFirstService: $0)) },
+            FirstDoublesServiceView(
+                onStart: { onStart(Match(doublesFirstService: $0)) },
                 onBack: { format = nil })
         }
     }

@@ -275,7 +275,7 @@ private struct CenterBar: View {
 
 extension Color {
     /// Vert-jaune vif : lisible d'un coup d'œil sur le fond noir de la montre.
-    fileprivate static let serving = Color(red: 0.78, green: 1.0, blue: 0.18)
+    static let serving = Color(red: 0.78, green: 1.0, blue: 0.18)
 }
 
 extension Side {

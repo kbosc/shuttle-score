@@ -206,3 +206,23 @@ private func expectService(
         expectService(match.state, server: .me, court: .right, receiver: .opponent1)
     }
 }
+
+@Suite struct OpponentConvention {
+    @Test func whenMyTeamServesOpponent1IsTheReceiver() {
+        #expect(
+            ServiceChoice.firstDoublesService(myTeamServer: .me)
+                == ServiceChoice(server: .me, receiver: .opponent1))
+        #expect(
+            ServiceChoice.firstDoublesService(myTeamServer: .partner)
+                == ServiceChoice(server: .partner, receiver: .opponent1))
+    }
+
+    @Test func whenTheOpponentsServeOpponent1IsTheServer() {
+        #expect(
+            ServiceChoice.firstDoublesService(opponentsServeTo: .me)
+                == ServiceChoice(server: .opponent1, receiver: .me))
+        #expect(
+            ServiceChoice.firstDoublesService(opponentsServeTo: .partner)
+                == ServiceChoice(server: .opponent1, receiver: .partner))
+    }
+}

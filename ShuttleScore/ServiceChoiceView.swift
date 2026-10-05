@@ -1,10 +1,11 @@
 import ShuttleCore
 import SwiftUI
 
-/// Choix du serveur puis du receveur (en double) au début d'un set.
+/// Choix du serveur puis du receveur au début d'un set de double, à partir du 2e set
+/// (le premier set passe par `FirstDoublesServiceView`).
 struct ServiceChoiceView: View {
     let title: String
-    /// Joueurs autorisés à servir : les 4 au 1er set, le camp gagnant du set précédent ensuite.
+    /// Joueurs autorisés à servir : le camp gagnant du set précédent.
     let servers: [Player]
     let onChoose: (ServiceChoice) -> Void
     /// Revenir à l'écran précédent (réglage du match).

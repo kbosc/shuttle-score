@@ -96,6 +96,22 @@ public struct ServiceChoice: Codable, Equatable, Sendable {
     }
 }
 
+extension ServiceChoice {
+    /// Premier set d'un double, quand mon camp sert : par convention, Adv. 1 est celui
+    /// qui reçoit (voir SPEC.md, « Joueurs »).
+    public static func firstDoublesService(myTeamServer server: Player) -> ServiceChoice {
+        precondition(server.side == .me, "Le serveur doit être de mon camp")
+        return ServiceChoice(server: server, receiver: .opponent1)
+    }
+
+    /// Premier set d'un double, quand le camp adverse sert : par convention, Adv. 1 est
+    /// celui qui sert ; seul le receveur de mon camp est à choisir.
+    public static func firstDoublesService(opponentsServeTo receiver: Player) -> ServiceChoice {
+        precondition(receiver.side == .me, "Le receveur doit être de mon camp")
+        return ServiceChoice(server: .opponent1, receiver: receiver)
+    }
+}
+
 /// Une entrée du journal du match.
 public enum MatchEvent: Codable, Equatable, Sendable {
     case rally(wonBy: Side)

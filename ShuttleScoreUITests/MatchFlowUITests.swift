@@ -83,8 +83,10 @@ final class MatchFlowUITests: XCTestCase {
     func testDoublesServiceRotationAndNextGameChoice() {
         let app = launchApp()
         app.buttons["setup.format.doubles"].tap()
-        app.buttons["choice.server.me"].tap()
-        app.buttons["choice.receiver.opponent1"].tap()
+        // Convention : je sers, donc Adv. 1 est celui qui reçoit ; plus de question sur le receveur.
+        XCTAssertEqual(app.staticTexts["setup.doubles.hint"].label, "Adv. 1 = celui qui reçoit")
+        attachScreenshot(named: "Double, qui sert", of: app)
+        app.buttons["setup.doubles.server.me"].tap()
 
         let me = app.buttons["match.half.me"]
         let opponent = app.buttons["match.half.opponent"]
@@ -132,16 +134,20 @@ final class MatchFlowUITests: XCTestCase {
     func testUndoBeforeTheFirstPointGoesBackToTheFirstServiceChoice() {
         let app = launchApp()
         app.buttons["setup.format.doubles"].tap()
-        app.buttons["choice.server.opponent1"].tap()
-        app.buttons["choice.receiver.me"].tap()
+        // Les adversaires servent : Adv. 1 est le serveur, il ne reste qu'à dire qui reçoit chez nous.
+        app.buttons["setup.doubles.server.opponents"].tap()
+        XCTAssertEqual(app.staticTexts["setup.doubles.hint"].label, "Adv. 1 = celui qui sert")
+        XCTAssertFalse(app.buttons["setup.doubles.server.me"].exists)
+        app.buttons["setup.doubles.receiver.me"].tap()
 
         let undo = app.buttons["match.undo"]
         XCTAssertTrue(undo.waitForExistence(timeout: 5))
+        expectCourt(app, "opponent", "screenLeft", "Adv. 1", "sert")
+        expectCourt(app, "me", "screenRight", "Moi", "reçoit")
         undo.tap()
-        XCTAssertTrue(app.buttons["choice.server.me"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["setup.doubles.server.me"].waitForExistence(timeout: 5))
 
-        app.buttons["choice.server.me"].tap()
-        app.buttons["choice.receiver.opponent1"].tap()
+        app.buttons["setup.doubles.server.me"].tap()
         XCTAssertTrue(app.buttons["match.half.me"].waitForExistence(timeout: 5))
         expectCourt(app, "me", "screenRight", "Moi", "sert")
     }
