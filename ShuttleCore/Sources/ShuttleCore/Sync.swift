@@ -45,6 +45,8 @@ public struct MatchSummary: Equatable, Sendable {
         case interrupted
     }
 
+    /// Identifiant du match résumé (pour le supprimer, et identifier sa ligne).
+    public let id: UUID
     public let startedAt: Date
     public let format: MatchFormat
     /// Score de chaque set joué, y compris le set entamé d'un match interrompu.
@@ -53,6 +55,7 @@ public struct MatchSummary: Equatable, Sendable {
 
     public init(_ record: MatchRecord) {
         let state = record.match.state
+        id = record.match.id
         startedAt = record.match.startedAt
         format = record.match.format
         // Le set entamé d'un match interrompu compte, pas un set pas encore commencé.

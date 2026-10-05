@@ -136,3 +136,10 @@ private func singles(_ points: [Side], rules: ScoringRules = .threeByFifteen) ->
         #expect(summary.games == [GameScore(me: 15, opponent: 0)])
     }
 }
+
+@Suite struct SummaryIdentity {
+    @Test func aSummaryCarriesItsMatchID() {
+        let match = Match(firstServer: .me)
+        #expect(MatchSummary(MatchRecord(match: match, status: .interrupted)).id == match.id)
+    }
+}

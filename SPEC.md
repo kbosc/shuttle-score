@@ -57,7 +57,9 @@ manipulation sur le simulateur ou la montre).
 13. **Stats et graphiques sur l'iPhone** : victoires et défaites, pourcentage de
     points gagnés au service et à la réception, évolution par semaine, simple
     contre double (voir Règles métier, « Stats »).
-14. **Nommer les joueurs après coup** sur l'iPhone, match par match, si on s'en
+14. **Supprimer un match** de l'historique de l'iPhone, avec confirmation (voir
+    Règles métier, « Suppression »).
+15. **Nommer les joueurs après coup** sur l'iPhone, match par match, si on s'en
     souvient. Facultatif : un match sans noms reste valable.
 
 ## Hors périmètre
@@ -65,10 +67,10 @@ manipulation sur le simulateur ou la montre).
 - Noms des joueurs **sur la montre** (liste, choix au démarrage). Abandonné après
   test en match : chaque tap avant le match coûte sur le terrain. Sur la montre, les
   joueurs restent Moi, Partenaire, Adv. 1 et Adv. 2 ; les noms se donnent après coup
-  sur l'iPhone (MVP n°14).
+  sur l'iPhone (MVP n°15).
 - Synchro iCloud (compte développeur payant), export, partage des stats.
-- Modifier le score d'un match depuis l'iPhone : l'iPhone ne fait que lire et
-  nommer.
+- Modifier le score d'un match depuis l'iPhone : l'iPhone lit, nomme et supprime,
+  mais ne modifie pas un match.
 - Formats autres que le 3×15 et le 5 points en simple dans l'UI (3×21, 5×11,
   formats libres, 5 points en double). Le moteur les accepte déjà en paramètre,
   mais aucun écran ne permet de les choisir.
@@ -247,6 +249,15 @@ HealthKit est bien signé avec une équipe personnelle au premier déploiement.
   pour ne pas être confondue avec 0 %. Le graphique par semaine montre les 12
   dernières semaines où un match a été terminé.
 
+### Suppression (sur l'iPhone)
+
+- Dans l'historique, glisser un match vers la gauche puis « Supprimer » ; une
+  confirmation suit (sur iOS 26, toucher à côté de la bulle annule).
+- Le match disparaît de l'historique et des stats de l'iPhone, et seulement là : la
+  montre garde son exemplaire (elle n'a pas d'historique).
+- Cas limite : si ce match est rouvert sur la montre (annulation du dernier point)
+  puis terminé ou arrêté, il est renvoyé et réapparaît sur l'iPhone.
+
 ### Noms après coup (sur l'iPhone)
 
 - Pour un match, on peut nommer Partenaire, Adversaire, Adv. 1 et Adv. 2. Chaque
@@ -287,5 +298,7 @@ Une tranche verticale par `/feature`, dans cet ordre. ✅ = livrée.
    Remplace l'historique sur la montre.
 10. ✅ **Stats et graphiques** : calculs dans `ShuttleCore`, graphiques Swift Charts
     (MVP n°13).
-11. **Nommer les joueurs après coup** sur l'iPhone, avec suggestion des noms déjà
-    utilisés, puis bilan par joueur (MVP n°14).
+11. ✅ **Supprimer un match** sur l'iPhone (ajout, pour nettoyer les matchs de
+    test ou lancés par erreur) (MVP n°14).
+12. **Nommer les joueurs après coup** sur l'iPhone, avec suggestion des noms déjà
+    utilisés, puis bilan par joueur (MVP n°15).

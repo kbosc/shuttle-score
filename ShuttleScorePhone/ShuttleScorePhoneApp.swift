@@ -35,6 +35,12 @@ final class HistoryModel {
         stats = MatchStats(records)
     }
 
+    /// Supprime le match de l'iPhone seulement ; l'historique et les stats sont recalculés.
+    func delete(matchID: UUID) {
+        try? store?.delete(matchID: matchID)
+        reload()
+    }
+
     /// Stockage de l'app ; en tests UI, un stockage en mémoire, pré-rempli avec `-SeedHistory`.
     static func make() -> HistoryModel {
         let arguments = ProcessInfo.processInfo.arguments
@@ -58,6 +64,7 @@ final class HistoryModel {
 @MainActor
 protocol HistorySource: AnyObject {
     func history() throws -> [MatchRecord]
+    func delete(matchID: UUID) throws
 }
 
 extension SwiftDataMatchStore: HistorySource {}
