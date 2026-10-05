@@ -20,6 +20,9 @@ targets:
     sources: [ShuttleScore]
     dependencies:
       - package: ShuttleCore
+        product: ShuttleCore
+      - package: ShuttleCore
+        product: ShuttleStore
       - sdk: HealthKit.framework
     info:
       # Les tableaux (ici le mode arrière-plan « workout ») ne passent pas par INFOPLIST_KEY_* :

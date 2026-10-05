@@ -1,5 +1,7 @@
+import Foundation
+
 /// Un camp du match. En simple, un camp = un joueur.
-public enum Side: Equatable, Sendable {
+public enum Side: String, Codable, Equatable, Sendable {
     case me
     case opponent
 
@@ -12,7 +14,7 @@ public enum Side: Equatable, Sendable {
 }
 
 /// Case de service, vue depuis le joueur qui sert.
-public enum ServiceCourt: Hashable, Sendable {
+public enum ServiceCourt: String, Codable, Hashable, Sendable {
     case right
     case left
 }
@@ -55,7 +57,7 @@ public struct GameScore: Equatable, Sendable {
 }
 
 /// Un joueur du match. En simple, seuls `me` et `opponent1` jouent.
-public enum Player: Hashable, Sendable, CaseIterable {
+public enum Player: String, Codable, Hashable, Sendable, CaseIterable {
     case me
     case partner
     case opponent1
@@ -78,13 +80,13 @@ public enum Player: Hashable, Sendable, CaseIterable {
     }
 }
 
-public enum MatchFormat: Equatable, Sendable {
+public enum MatchFormat: String, Codable, Equatable, Sendable {
     case singles
     case doubles
 }
 
 /// Qui sert et qui reçoit le premier échange d'un set.
-public struct ServiceChoice: Equatable, Sendable {
+public struct ServiceChoice: Codable, Equatable, Sendable {
     public let server: Player
     public let receiver: Player
 
@@ -95,7 +97,7 @@ public struct ServiceChoice: Equatable, Sendable {
 }
 
 /// Une entrée du journal du match.
-public enum MatchEvent: Equatable, Sendable {
+public enum MatchEvent: Codable, Equatable, Sendable {
     case rally(wonBy: Side)
     /// Choix du service au début d'un set (en double, à partir du 2e set).
     case serviceChoice(ServiceChoice)
@@ -130,17 +132,47 @@ public struct MatchState: Equatable, Sendable {
     }
 }
 
+/// Un événement du journal et son heure.
+public struct LoggedEvent: Codable, Equatable, Sendable {
+    public let event: MatchEvent
+    public let at: Date
+}
+
+/// Un échange tel qu'il est gardé pour les stats : qui l'a gagné, qui servait, et quand.
+public struct RallyRecord: Equatable, Sendable {
+    public let winner: Side
+    public let server: Player
+    public let at: Date
+
+    public init(winner: Side, server: Player, at: Date) {
+        self.winner = winner
+        self.server = server
+        self.at = at
+    }
+}
+
 /// Un match : les réglages de départ plus le journal des événements.
 /// L'état n'est jamais stocké, il est recalculé en rejouant le journal.
-public struct Match: Sendable {
+/// `Codable` : c'est ce qui est sauvegardé sur la montre.
+public struct Match: Codable, Sendable {
+    public let id: UUID
+    public let startedAt: Date
     public let rules: ScoringRules
     public let format: MatchFormat
     /// Service du premier set, choisi au démarrage. Il ne s'annule pas.
     public let firstService: ServiceChoice
-    public private(set) var events: [MatchEvent] = []
+    public private(set) var log: [LoggedEvent] = []
+
+    /// Les événements du journal, sans leur heure.
+    public var events: [MatchEvent] { log.map(\.event) }
 
     /// Match en simple.
-    public init(rules: ScoringRules = .threeByFifteen, firstServer: Side) {
+    public init(
+        rules: ScoringRules = .threeByFifteen, firstServer: Side, id: UUID = UUID(),
+        startedAt: Date = Date()
+    ) {
+        self.id = id
+        self.startedAt = startedAt
         self.rules = rules
         self.format = .singles
         let server: Player = firstServer == .me ? .me : .opponent1
@@ -149,13 +181,34 @@ public struct Match: Sendable {
     }
 
     /// Match en double. Le serveur et le receveur doivent être dans des camps opposés.
-    public init(rules: ScoringRules = .threeByFifteen, doublesFirstService: ServiceChoice) {
+    public init(
+        rules: ScoringRules = .threeByFifteen, doublesFirstService: ServiceChoice,
+        id: UUID = UUID(),
+        startedAt: Date = Date()
+    ) {
         precondition(
             doublesFirstService.server.side != doublesFirstService.receiver.side,
             "Le serveur et le receveur doivent être dans des camps opposés")
+        self.id = id
+        self.startedAt = startedAt
         self.rules = rules
         self.format = .doubles
         self.firstService = doublesFirstService
+    }
+
+    /// Chaque échange avec son gagnant, son serveur et son heure (journal gardé pour les stats).
+    public var rallyRecords: [RallyRecord] {
+        // Rejoue le journal pas à pas pour connaître le serveur avant chaque échange.
+        var replay = self
+        replay.log = []
+        var records: [RallyRecord] = []
+        for entry in log {
+            if case .rally(let winner) = entry.event, let server = replay.state.server {
+                records.append(RallyRecord(winner: winner, server: server, at: entry.at))
+            }
+            replay.log.append(entry)
+        }
+        return records
     }
 
     /// Les gagnants des échanges, dans l'ordre.
@@ -210,25 +263,25 @@ public struct Match: Sendable {
     }
 
     /// Ignoré si le match est terminé ou si le service du set reste à choisir.
-    public mutating func recordRally(wonBy side: Side) {
+    public mutating func recordRally(wonBy side: Side, at date: Date = Date()) {
         let current = state
         guard !current.isOver, current.awaitingServiceChoice == nil else { return }
-        events.append(.rally(wonBy: side))
+        log.append(LoggedEvent(event: .rally(wonBy: side), at: date))
     }
 
     /// Ignoré si aucun choix n'est attendu, ou si le choix ne respecte pas
     /// le camp attendu au service et un receveur adverse.
-    public mutating func chooseService(_ choice: ServiceChoice) {
+    public mutating func chooseService(_ choice: ServiceChoice, at date: Date = Date()) {
         guard let side = state.awaitingServiceChoice, choice.server.side == side,
             choice.receiver.side == side.opposite
         else { return }
-        events.append(.serviceChoice(choice))
+        log.append(LoggedEvent(event: .serviceChoice(choice), at: date))
     }
 
     /// Retire le dernier événement du journal (un échange ou un choix de service).
     /// Sans effet sur un match sans événement.
     public mutating func undo() {
-        _ = events.popLast()
+        _ = log.popLast()
     }
 }
 

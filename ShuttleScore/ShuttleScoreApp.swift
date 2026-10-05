@@ -1,4 +1,5 @@
 import ShuttleCore
+import ShuttleStore
 import SwiftUI
 
 @main
@@ -10,19 +11,30 @@ struct ShuttleScoreApp: App {
     }
 }
 
-/// Réglage du match, puis match. Rien n'est persisté : quitter l'app perd le match.
+/// Reprise éventuelle, réglage du match, puis match. Chaque changement du match est sauvegardé.
 struct RootView: View {
     @State private var match: Match?
+    /// Match en cours retrouvé au lancement, en attente de la décision « reprendre / arrêter ».
+    @State private var pendingResume: Match?
     /// Format à reprendre quand on annule avant le premier point (mauvais premier service).
     @State private var setupFormat: MatchFormat?
     @State private var setupRules: ScoringRules?
+    @State private var recorder: MatchRecorder
     /// Séance HealthKit du match ; factice pendant les tests UI.
     @State private var workout = WorkoutTracker(
         session: ProcessInfo.processInfo.arguments.contains("-UITests")
             ? NoWorkoutSession() : HealthKitWorkoutSession())
 
+    init() {
+        let recorder = MatchRecorder(store: Self.makeStore())
+        _recorder = State(initialValue: recorder)
+        _pendingResume = State(initialValue: recorder.resumableMatch())
+    }
+
     var body: some View {
         content
+            // Au lancement : une séance orpheline (pas de match à reprendre) est terminée.
+            .task { await workout.appLaunched(withMatchToResume: pendingResume != nil) }
             // Pause de la séance à la fin du match, reprise si une annulation le rouvre.
             .onChange(of: match?.state.isOver) { _, isOver in
                 if let isOver { workout.matchChanged(isOver: isOver) }
@@ -30,8 +42,27 @@ struct RootView: View {
     }
 
     @ViewBuilder private var content: some View {
-        if let current = match {
-            let binding = Binding(get: { current }, set: { match = $0 })
+        if let resumable = pendingResume {
+            ResumeView(
+                match: resumable,
+                onResume: {
+                    pendingResume = nil
+                    match = resumable
+                    Task { await workout.matchResumed() }
+                },
+                onStop: {
+                    pendingResume = nil
+                    recorder.matchStopped(resumable)
+                    Task { await workout.resumeDeclined() }
+                })
+        } else if let current = match {
+            // Toute modification du match (point, annulation, choix du service) est sauvegardée.
+            let binding = Binding(
+                get: { current },
+                set: {
+                    match = $0
+                    recorder.matchChanged($0)
+                })
             if let side = current.state.awaitingServiceChoice {
                 // En double, au début de chaque set à partir du 2e.
                 ServiceChoiceView(
@@ -45,6 +76,12 @@ struct RootView: View {
                     onUndoFirstService: {
                         setupFormat = current.format
                         setupRules = current.rules
+                        leave(current)
+                    },
+                    onStop: {
+                        recorder.matchStopped(current)
+                        setupFormat = nil
+                        setupRules = nil
                         leave(current)
                     },
                     onNewMatch: {
@@ -65,4 +102,26 @@ struct RootView: View {
         match = nil
         Task { await workout.matchLeft(hadRallies: !current.events.isEmpty) }
     }
+
+    /// Stockage SwiftData de l'app. `-ResetStore` (tests UI) part d'un stockage vide.
+    /// Si le stockage est inutilisable, on joue quand même, sans rien sauvegarder.
+    private static func makeStore() -> any MatchStore {
+        do {
+            let store = try SwiftDataMatchStore()
+            if ProcessInfo.processInfo.arguments.contains("-ResetStore") {
+                try store.deleteAll()
+            }
+            return store
+        } catch {
+            return NoMatchStore()
+        }
+    }
+}
+
+/// Stockage de secours quand SwiftData est inutilisable : rien n'est gardé.
+@MainActor
+private final class NoMatchStore: MatchStore {
+    func save(_ record: MatchRecord) throws {}
+    func delete(matchID: UUID) throws {}
+    func latestInProgress() throws -> MatchRecord? { nil }
 }

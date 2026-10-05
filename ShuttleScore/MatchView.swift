@@ -7,7 +7,10 @@ struct MatchView: View {
     @Binding var match: Match
     /// Annuler avant le premier point : retour au choix du premier service.
     let onUndoFirstService: () -> Void
+    /// Arrêter le match avant sa fin (sauvegardé comme interrompu).
+    let onStop: () -> Void
     let onNewMatch: () -> Void
+    @State private var confirmsStop = false
 
     var body: some View {
         let state = match.state
@@ -16,12 +19,18 @@ struct MatchView: View {
                 score(.opponent)
             }
             CenterBar(
-                state: state, rules: match.rules, undo: undo, onNewMatch: onNewMatch)
+                state: state, rules: match.rules, undo: undo, stop: { confirmsStop = true },
+                onNewMatch: onNewMatch)
             SideHalf(side: .me, format: match.format, rules: match.rules, state: state) {
                 score(.me)
             }
         }
         .ignoresSafeArea(edges: .bottom)
+        // Confirmation : un tap raté en plein match ne doit pas l'arrêter.
+        .confirmationDialog("Arrêter le match ?", isPresented: $confirmsStop) {
+            Button("Arrêter le match", role: .destructive, action: onStop)
+            Button("Continuer", role: .cancel) {}
+        }
     }
 
     private func undo() {
@@ -142,6 +151,7 @@ private struct CenterBar: View {
     let state: MatchState
     let rules: ScoringRules
     let undo: () -> Void
+    let stop: () -> Void
     let onNewMatch: () -> Void
 
     var body: some View {
@@ -180,6 +190,15 @@ private struct CenterBar: View {
                     .lineLimit(1)
                     .frame(maxWidth: .infinity)
                     .accessibilityIdentifier("match.games")
+                Button(action: stop) {
+                    Image(systemName: "stop.fill")
+                        .font(.footnote)
+                        .frame(minWidth: Self.target.height, minHeight: Self.target.height)
+                        .background(Color.gray.opacity(0.35), in: Circle())
+                        .contentShape(Circle())
+                }
+                .accessibilityLabel("Arrêter")
+                .accessibilityIdentifier("match.stop")
             }
         }
         .buttonStyle(.plain)
@@ -217,5 +236,5 @@ extension Side {
 
 #Preview("En cours") {
     @Previewable @State var match = Match(firstServer: .me)
-    MatchView(match: $match, onUndoFirstService: {}, onNewMatch: {})
+    MatchView(match: $match, onUndoFirstService: {}, onStop: {}, onNewMatch: {})
 }

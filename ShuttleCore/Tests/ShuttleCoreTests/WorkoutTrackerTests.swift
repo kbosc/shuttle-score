@@ -8,7 +8,11 @@ private final class FakeSession: WorkoutSession {
         case pause
         case resume
         case end(save: Bool)
+        case endRecovered
+        case recover
     }
+
+    var hasRecoverableSession = false
 
     var calls: [Call] = []
     var startError: (any Error)?
@@ -32,6 +36,11 @@ private final class FakeSession: WorkoutSession {
     func pause() { calls.append(.pause) }
     func resume() { calls.append(.resume) }
     func end(save: Bool) async { calls.append(.end(save: save)) }
+    func endRecoveredSession() async { calls.append(.endRecovered) }
+    func recover() async -> Bool {
+        calls.append(.recover)
+        return hasRecoverableSession
+    }
 }
 
 private struct Denied: Error {}
@@ -87,6 +96,62 @@ private struct Denied: Error {}
         await tracker.matchStarted()
         await tracker.matchLeft(hadRallies: false)
         #expect(session.calls == [.start, .end(save: false)])
+    }
+
+    @Test func resumingAMatchRecoversItsWorkout() async {
+        let session = FakeSession()
+        session.hasRecoverableSession = true
+        let tracker = WorkoutTracker(session: session)
+        await tracker.matchResumed()
+        #expect(session.calls == [.recover])
+        #expect(tracker.status == .running)
+    }
+
+    @Test func resumingAMatchWhoseWorkoutIsGoneStartsANewOne() async {
+        let session = FakeSession()
+        let tracker = WorkoutTracker(session: session)
+        await tracker.matchResumed()
+        #expect(session.calls == [.recover, .start])
+        #expect(tracker.status == .running)
+    }
+
+    @Test func aNewMatchNeverRecoversAnOldWorkout() async {
+        let session = FakeSession()
+        session.hasRecoverableSession = true
+        let tracker = WorkoutTracker(session: session)
+        await tracker.matchStarted()
+        #expect(session.calls == [.start])
+    }
+
+    @Test func launchingWithoutAMatchToResumeEndsAnOrphanWorkout() async {
+        let session = FakeSession()
+        let tracker = WorkoutTracker(session: session)
+        await tracker.appLaunched(withMatchToResume: false)
+        #expect(session.calls == [.endRecovered])
+    }
+
+    @Test func launchingWithAMatchToResumeKeepsItsWorkoutForTheDecision() async {
+        let session = FakeSession()
+        let tracker = WorkoutTracker(session: session)
+        await tracker.appLaunched(withMatchToResume: true)
+        #expect(session.calls.isEmpty)
+    }
+
+    @Test func decliningTheResumeEndsTheWorkoutLeftByTheCrash() async {
+        let session = FakeSession()
+        let tracker = WorkoutTracker(session: session)
+        await tracker.resumeDeclined()
+        #expect(session.calls == [.endRecovered])
+        #expect(tracker.status == .idle)
+    }
+
+    @Test func decliningTheResumeDoesNotTouchAWorkoutInProgress() async {
+        let session = FakeSession()
+        let tracker = WorkoutTracker(session: session)
+        await tracker.matchStarted()
+        await tracker.resumeDeclined()
+        #expect(session.calls == [.start])
+        #expect(tracker.status == .running)
     }
 
     @Test func leavingWithoutAnyMatchDoesNothing() async {

@@ -190,6 +190,89 @@ final class MatchFlowUITests: XCTestCase {
         attachScreenshot(named: "Fin d'un 5 points", of: app)
     }
 
+    /// Un match en cours survit à la fermeture de l'app : il est proposé à la reprise.
+    @MainActor
+    func testAMatchInProgressIsOfferedForResumeAfterRelaunch() {
+        let app = launchApp()
+        startSingles(app, rules: "official")
+        let me = app.buttons["match.half.me"]
+        XCTAssertTrue(me.waitForExistence(timeout: 5))
+        me.tap()
+        me.tap()
+        app.buttons["match.half.opponent"].tap()
+
+        app.terminate()
+        relaunch(app)
+        let resume = app.buttons["resume.continue"]
+        XCTAssertTrue(resume.waitForExistence(timeout: 5))
+        attachScreenshot(named: "Reprise", of: app)
+        resume.tap()
+        XCTAssertEqual(app.staticTexts["match.score.me"].label, "2")
+        XCTAssertEqual(app.staticTexts["match.score.opponent"].label, "1")
+
+        // Refuser la reprise arrête le match : il n'est plus proposé ensuite.
+        app.terminate()
+        relaunch(app)
+        XCTAssertTrue(app.buttons["resume.stop"].waitForExistence(timeout: 5))
+        app.buttons["resume.stop"].tap()
+        XCTAssertTrue(app.buttons["setup.format.singles"].waitForExistence(timeout: 5))
+        app.terminate()
+        relaunch(app)
+        XCTAssertTrue(app.buttons["setup.format.singles"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["resume.continue"].exists)
+    }
+
+    /// Le bouton Arrêter (avec confirmation) termine le match : il n'est pas repris.
+    @MainActor
+    func testAStoppedMatchIsNotOfferedForResume() {
+        let app = launchApp()
+        startSingles(app, rules: "official")
+        let me = app.buttons["match.half.me"]
+        XCTAssertTrue(me.waitForExistence(timeout: 5))
+        me.tap()
+
+        app.buttons["match.stop"].tap()
+        let confirm = app.buttons["Arrêter le match"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+        XCTAssertTrue(app.buttons["setup.format.singles"].waitForExistence(timeout: 5))
+
+        app.terminate()
+        relaunch(app)
+        XCTAssertTrue(app.buttons["setup.format.singles"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["resume.continue"].exists)
+    }
+
+    /// Un 5 points n'est jamais sauvegardé, donc jamais proposé à la reprise.
+    @MainActor
+    func testAFivePointsMatchIsNeverOfferedForResume() {
+        let app = launchApp()
+        startSingles(app, rules: "fivePoints")
+        let me = app.buttons["match.half.me"]
+        XCTAssertTrue(me.waitForExistence(timeout: 5))
+        me.tap()
+        me.tap()
+
+        app.terminate()
+        relaunch(app)
+        XCTAssertTrue(app.buttons["setup.format.singles"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["resume.continue"].exists)
+    }
+
+    @MainActor
+    private func startSingles(_ app: XCUIApplication, rules: String) {
+        app.buttons["setup.format.singles"].tap()
+        app.buttons["setup.rules.\(rules)"].tap()
+        app.buttons["setup.firstServer.me"].tap()
+    }
+
+    /// Relance l'app sans effacer les matchs sauvegardés.
+    @MainActor
+    private func relaunch(_ app: XCUIApplication) {
+        app.launchArguments = ["-UITests"]
+        app.launch()
+    }
+
     /// Vérifie qui occupe une case, vue depuis ma place, et son rôle (« sert », « reçoit » ou rien).
     @MainActor
     private func expectCourt(
@@ -202,11 +285,12 @@ final class MatchFlowUITests: XCTestCase {
         XCTAssertEqual(slot.value as? String ?? "", role, file: file, line: line)
     }
 
-    /// Lance l'app avec une séance factice : la demande d'accès HealthKit bloquerait l'écran.
+    /// Lance l'app avec une séance factice (la demande d'accès HealthKit bloquerait l'écran)
+    /// et sans aucun match sauvegardé.
     @MainActor
     private func launchApp() -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-UITests"]
+        app.launchArguments = ["-UITests", "-ResetStore"]
         app.launch()
         return app
     }

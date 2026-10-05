@@ -46,6 +46,25 @@ final class HealthKitWorkoutSession: WorkoutSession {
         session?.resume()
     }
 
+    /// Après un plantage, watchOS garde la séance du match active : on la reprend.
+    func recover() async -> Bool {
+        guard session == nil, let recovered = try? await store.recoverActiveWorkoutSession()
+        else { return false }
+        let builder = recovered.associatedWorkoutBuilder()
+        // La source de données ne survit pas forcément au plantage : on la rebranche.
+        builder.dataSource = HKLiveWorkoutDataSource(
+            healthStore: store, workoutConfiguration: recovered.workoutConfiguration)
+        session = recovered
+        self.builder = builder
+        recovered.resume()
+        return true
+    }
+
+    func endRecoveredSession() async {
+        guard await recover() else { return }
+        await end(save: true)
+    }
+
     func end(save: Bool) async {
         guard let session, let builder else { return }
         self.session = nil
@@ -72,4 +91,6 @@ final class NoWorkoutSession: WorkoutSession {
     func pause() {}
     func resume() {}
     func end(save: Bool) async {}
+    func recover() async -> Bool { false }
+    func endRecoveredSession() async {}
 }

@@ -6,7 +6,7 @@ features sont dans `SPEC.md` : c'est la référence, ne la recopie pas ici.
 
 ## Commandes
 
-- `make verify` : lint swift-format + build + tests de `ShuttleCore`, en ~10 s. Doit passer avant de finir une tâche.
+- `make verify` : lint swift-format + build + tests du package (`ShuttleCore` et `ShuttleStore`), en ~15 s. Doit passer avant de finir une tâche.
 - `make format` : reformate le code en place.
 - `make project` : régénère `ShuttleScore.xcodeproj` depuis `project.yml`.
 - `make app` : build complet de l'app sur simulateur watchOS. Lent, tourne en CI.
@@ -18,8 +18,13 @@ features sont dans `SPEC.md` : c'est la référence, ne la recopie pas ici.
 - `ShuttleCore/` : Swift Package pur, sans SwiftUI, SwiftData ni HealthKit.
   **Toutes les règles métier vivent ici** (score, sets, service, cases, annulation)
   et sont testées avec Swift Testing (`import Testing`).
+- `ShuttleCore/Sources/ShuttleStore/` : sauvegarde SwiftData des matchs, derrière le
+  protocole `MatchStore` de `ShuttleCore`. Testée sur Mac (stockage en mémoire ou
+  fichier temporaire), sans simulateur. Le match entier est gardé en JSON (`Match` est
+  `Codable`) : tout changement de `Match` doit rester décodable depuis les matchs déjà
+  sauvegardés sur la montre.
 - `ShuttleScore/` : app watchOS en SwiftUI. Une UI fine qui appelle `ShuttleCore`.
-  La persistance (SwiftData) et la séance HealthKit vivent aussi ici.
+  La séance HealthKit (`HealthKitWorkoutSession`) vit ici.
 - `ShuttleScoreUITests/` : tests de bout en bout du parcours principal.
 - `project.yml` : source de vérité du projet Xcode (XcodeGen).
 
@@ -56,3 +61,8 @@ features sont dans `SPEC.md` : c'est la référence, ne la recopie pas ici.
 - La logique de la séance (quand démarrer, mettre en pause, terminer) vit dans
   `ShuttleCore/WorkoutTracker.swift`, derrière le protocole `WorkoutSession` ;
   seul `HealthKitWorkoutSession` importe HealthKit.
+- Les tests UI lancent l'app avec `-ResetStore` pour partir sans match sauvegardé ;
+  pour tester la reprise, ils tuent l'app puis la relancent **sans** cet argument.
+- Quand faire quoi (sauvegarder, reprendre, arrêter la séance) se décide dans
+  `MatchRecorder` et `WorkoutTracker` (`ShuttleCore`), testés avec des faux ; l'app ne
+  fait que les appeler depuis `RootView`.

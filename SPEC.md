@@ -151,6 +151,21 @@ HealthKit est bien signé avec une équipe personnelle au premier déploiement.
   choisir son serveur et le camp adverse son receveur, la montre **redemande**
   serveur et receveur au début de chaque set.
 
+### Sauvegarde et reprise
+
+- Un match est sauvegardé à partir de son premier point, puis à chaque changement
+  (point, annulation, choix du service). Annuler tous les points le supprime.
+- Statut : `en cours` ; `terminé` dès qu'il y a un vainqueur (une annulation qui le
+  rouvre le repasse `en cours`) ; `interrompu` quand on l'arrête.
+- Arrêter : bouton ■ pendant le match, avec confirmation (un tap raté ne l'arrête pas).
+- Au lancement, le dernier match `en cours` est proposé : « Reprendre » ou « Arrêter »
+  (refuser revient à l'arrêter : il passe `interrompu`).
+- Séance HealthKit : à la reprise, la séance laissée active par le plantage est
+  récupérée ; si la reprise est refusée, elle est terminée et enregistrée.
+- Joueurs : sauvegardés par rôle (Moi, Partenaire, Adv. 1, Adv. 2) en attendant la
+  liste de joueurs.
+- Matchs en 5 points : jamais sauvegardés, jamais proposés.
+
 ### Positions à l'écran
 
 - Chaque moitié de l'écran montre les cases de son camp, vues depuis ma place :
@@ -211,7 +226,7 @@ Une tranche verticale par `/feature`, dans cet ordre. ✅ = livrée.
    dans sa case, vue depuis ma place.
 5. ✅ **Simple en 5 points** (ajout après test en match) : un set sec, jamais
    sauvegardé.
-6. **Persistance** : sauvegarde du match et de son journal, statuts `terminé` et
+6. ✅ **Persistance** : sauvegarde du match et de son journal, statuts `terminé` et
    `interrompu`, arrêt anticipé, reprise d'un match en cours au relancement
    (hors matchs en 5 points, qui ne sont jamais proposés à la reprise).
 7. **Pause et changement de côté** à 8 points : retour haptique et message.
