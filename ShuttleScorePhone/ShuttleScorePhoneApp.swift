@@ -21,6 +21,14 @@ struct ShuttleScorePhoneApp: App {
 final class HistoryModel {
     private(set) var summaries: [MatchSummary] = []
     private(set) var stats = MatchStats([])
+    private(set) var playerRecords: [PlayerRecord] = []
+    /// Noms donnés aux joueurs, par match (sur l'iPhone seulement).
+    private(set) var names: [UUID: [Player: String]] = [:]
+    private(set) var records: [UUID: MatchRecord] = [:]
+    /// Noms déjà utilisés : suggestions et orthographe de référence (le plus récent d'abord).
+    var directory: PlayerDirectory {
+        PlayerDirectory(summaries.compactMap { names[$0.id] })
+    }
     private let store: (any HistorySource)?
     private var connectivity: PhoneConnectivity?
 
@@ -30,9 +38,25 @@ final class HistoryModel {
     }
 
     func reload() {
-        let records = (try? store?.history()) ?? []
-        summaries = records.map(MatchSummary.init)
-        stats = MatchStats(records)
+        let history = (try? store?.history()) ?? []
+        names = (try? store?.allNames()) ?? [:]
+        records = Dictionary(uniqueKeysWithValues: history.map { ($0.match.id, $0) })
+        summaries = history.map(MatchSummary.init)
+        stats = MatchStats(history)
+        playerRecords = MatchStats.byPlayer(history, names: names)
+    }
+
+    /// Enregistre les noms d'un match s'ils sont valides ; sinon renvoie la raison du refus.
+    func saveNames(_ raw: [Player: String], forMatch id: UUID) -> NamingResult {
+        guard let format = records[id]?.match.format else { return .valid([:]) }
+        let result = PlayerDirectory.forEditing(
+            id, namesNewestFirst: summaries.map { ($0.id, names[$0.id] ?? [:]) }
+        ).naming(raw, in: format)
+        if case .valid(let cleaned) = result {
+            try? store?.setNames(cleaned, forMatch: id)
+            reload()
+        }
+        return result
     }
 
     /// Supprime le match de l'iPhone seulement ; l'historique et les stats sont recalculés.
@@ -65,6 +89,8 @@ final class HistoryModel {
 protocol HistorySource: AnyObject {
     func history() throws -> [MatchRecord]
     func delete(matchID: UUID) throws
+    func allNames() throws -> [UUID: [Player: String]]
+    func setNames(_ names: [Player: String], forMatch id: UUID) throws
 }
 
 extension SwiftDataMatchStore: HistorySource {}

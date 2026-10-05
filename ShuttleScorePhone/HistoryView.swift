@@ -16,16 +16,23 @@ struct HistoryView: View {
                         "Les matchs terminés ou arrêtés sur ta montre apparaîtront ici."))
             } else {
                 List(model.summaries, id: \.id) { summary in
-                    HistoryRow(summary: summary)
-                        .swipeActions(edge: .trailing) {
-                            // Pas de rôle « destructive » : il retirerait la ligne avant
-                            // la confirmation.
-                            Button("Supprimer", systemImage: "trash") {
-                                pendingDeletion = summary
-                            }
-                            .tint(.red)
-                            .accessibilityIdentifier("history.delete")
+                    NavigationLink {
+                        MatchDetailView(model: model, matchID: summary.id)
+                    } label: {
+                        HistoryRow(summary: summary, names: model.names[summary.id] ?? [:])
+                    }
+                    // Identifiant sur le lien (la ligne entière), pas sur son contenu :
+                    // sinon chaque match est compté deux fois par les tests UI.
+                    .accessibilityIdentifier("history.row")
+                    .swipeActions(edge: .trailing) {
+                        // Pas de rôle « destructive » : il retirerait la ligne avant
+                        // la confirmation.
+                        Button("Supprimer", systemImage: "trash") {
+                            pendingDeletion = summary
                         }
+                        .tint(.red)
+                        .accessibilityIdentifier("history.delete")
+                    }
                 }
             }
         }
@@ -43,7 +50,7 @@ struct HistoryView: View {
         }
         .toolbar {
             NavigationLink {
-                StatsView(stats: model.stats)
+                StatsView(stats: model.stats, playerRecords: model.playerRecords)
             } label: {
                 Label("Stats", systemImage: "chart.bar.xaxis")
             }
@@ -61,6 +68,16 @@ extension HistoryView {
 
 private struct HistoryRow: View {
     let summary: MatchSummary
+    let names: [Player: String]
+
+    /// « avec Paul · contre Lucas, Marc », si des joueurs sont nommés.
+    private var namesLine: String? {
+        let partner = names[.partner].map { "avec \($0)" }
+        let opponents = [names[.opponent1], names[.opponent2]].compactMap { $0 }
+        let against = opponents.isEmpty ? nil : "contre \(opponents.joined(separator: ", "))"
+        let line = [partner, against].compactMap { $0 }.joined(separator: " · ")
+        return line.isEmpty ? nil : line
+    }
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
@@ -72,6 +89,11 @@ private struct HistoryRow: View {
                     .font(.headline)
                 Text(summary.games.map { "\($0.me)–\($0.opponent)" }.joined(separator: " · "))
                     .font(.body.monospacedDigit())
+                if let namesLine {
+                    Text(namesLine)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
             }
             Spacer()
             Text(resultLabel)
@@ -80,7 +102,6 @@ private struct HistoryRow: View {
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("history.row")
     }
 
     private var resultLabel: String {

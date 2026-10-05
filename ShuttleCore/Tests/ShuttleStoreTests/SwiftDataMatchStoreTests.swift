@@ -79,4 +79,31 @@ import Testing
         #expect(history.map(\.match.id) == [newest.id, oldest.id])
         #expect(history.map(\.status) == [.interrupted, .finished])
     }
+
+    @Test func namesAreKeptWithTheirMatch() throws {
+        let store = try SwiftDataMatchStore(inMemory: true)
+        let named = match(points: 30)
+        try store.save(MatchRecord(match: named, status: .finished))
+        try store.setNames([.opponent1: "Lucas"], forMatch: named.id)
+        #expect(try store.names(forMatch: named.id) == [.opponent1: "Lucas"])
+        #expect(try store.allNames() == [named.id: [.opponent1: "Lucas"]])
+    }
+
+    @Test func namesSurviveTheMatchBeingSentAgainByTheWatch() throws {
+        let store = try SwiftDataMatchStore(inMemory: true)
+        let named = match(points: 2)
+        try store.save(MatchRecord(match: named, status: .interrupted))
+        try store.setNames([.opponent1: "Lucas"], forMatch: named.id)
+        try store.save(MatchRecord(match: named, status: .finished))
+        #expect(try store.names(forMatch: named.id) == [.opponent1: "Lucas"])
+    }
+
+    @Test func namesLeaveWithTheirMatch() throws {
+        let store = try SwiftDataMatchStore(inMemory: true)
+        let named = match(points: 2)
+        try store.save(MatchRecord(match: named, status: .interrupted))
+        try store.setNames([.opponent1: "Lucas"], forMatch: named.id)
+        try store.delete(matchID: named.id)
+        #expect(try store.allNames().isEmpty)
+    }
 }

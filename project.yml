@@ -65,7 +65,10 @@ targets:
   ShuttleScorePhone:
     type: application
     platform: iOS
-    sources: [ShuttleScorePhone]
+    sources:
+      - ShuttleScorePhone
+      # Libellés des joueurs (Moi, Partenaire, Adv. 1…), partagés avec la montre.
+      - ShuttleScore/Players.swift
     dependencies:
       - package: ShuttleCore
         product: ShuttleCore

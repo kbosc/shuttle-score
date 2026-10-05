@@ -14,6 +14,9 @@ final class StoredMatch {
     /// Joueurs du match (rôles : me, partner, opponent1, opponent2).
     var players: [String]
     var payload: Data
+    /// Noms donnés après coup sur l'iPhone (rôle → nom). Valeur par défaut : migration
+    /// automatique des matchs déjà enregistrés.
+    var playerNames: [String: String] = [:]
 
     init(
         id: UUID, status: String, startedAt: Date, updatedAt: Date, format: String,
@@ -96,6 +99,36 @@ public final class SwiftDataMatchStore: MatchStore {
             else { return nil }
             return MatchRecord(match: match, status: status)
         }
+    }
+
+    /// Noms donnés aux joueurs d'un match (rôle → nom).
+    public func names(forMatch id: UUID) throws -> [Player: String] {
+        Self.decode(try stored(id: id)?.playerNames ?? [:])
+    }
+
+    /// Remplace les noms d'un match. Ils ne sont jamais touchés par la synchro de la montre.
+    public func setNames(_ names: [Player: String], forMatch id: UUID) throws {
+        guard let stored = try stored(id: id) else { return }
+        stored.playerNames = Dictionary(
+            uniqueKeysWithValues: names.map { ($0.key.rawValue, $0.value) })
+        try context.save()
+    }
+
+    /// Noms de tous les matchs nommés.
+    public func allNames() throws -> [UUID: [Player: String]] {
+        var all: [UUID: [Player: String]] = [:]
+        for stored in try context.fetch(FetchDescriptor<StoredMatch>())
+        where !stored.playerNames.isEmpty {
+            all[stored.id] = Self.decode(stored.playerNames)
+        }
+        return all
+    }
+
+    private static func decode(_ raw: [String: String]) -> [Player: String] {
+        Dictionary(
+            uniqueKeysWithValues: raw.compactMap { key, name in
+                Player(rawValue: key).map { ($0, name) }
+            })
     }
 
     /// Efface tout (tests UI : chaque test démarre sans match sauvegardé).

@@ -267,7 +267,13 @@ HealthKit est bien signé avec une équipe personnelle au premier déploiement.
 - Les noms déjà utilisés sont proposés. Espaces retirés aux bords ; « Lucas » et
   « lucas » sont la même personne.
 - Les noms restent sur l'iPhone : ils ne sont ni renvoyés à la montre, ni dans le
-  dépôt Git.
+  dépôt Git. Ils survivent quand la montre renvoie le même match, et partent avec
+  lui quand on le supprime.
+- Une même personne ne peut pas tenir deux rôles d'un match : l'enregistrement est
+  refusé avec un message.
+- Bilan par joueur (dans les stats) : victoires et défaites **avec** la personne
+  (partenaire) et **contre** elle (adversaire), sur les matchs terminés où elle est
+  nommée.
 
 ## Découpage
 
@@ -300,5 +306,5 @@ Une tranche verticale par `/feature`, dans cet ordre. ✅ = livrée.
     (MVP n°13).
 11. ✅ **Supprimer un match** sur l'iPhone (ajout, pour nettoyer les matchs de
     test ou lancés par erreur) (MVP n°14).
-12. **Nommer les joueurs après coup** sur l'iPhone, avec suggestion des noms déjà
+12. ✅ **Nommer les joueurs après coup** sur l'iPhone, avec suggestion des noms déjà
     utilisés, puis bilan par joueur (MVP n°15).

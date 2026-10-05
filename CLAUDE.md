@@ -27,8 +27,9 @@ features sont dans `SPEC.md` : c'est la référence, ne la recopie pas ici.
 - `ShuttleScore/` : app watchOS en SwiftUI. Une UI fine qui appelle `ShuttleCore`.
   La séance HealthKit (`HealthKitWorkoutSession`) vit ici.
 - `ShuttleScoreUITests/` : tests de bout en bout du parcours principal.
-- `ShuttleScorePhone/` : app iPhone (historique, plus tard stats), qui embarque l'app
-  montre. Reçoit les matchs par WatchConnectivity (`PhoneConnectivity`) ; la montre
+- `ShuttleScorePhone/` : app iPhone (historique, suppression, noms des joueurs après
+  coup, stats), qui embarque l'app montre. `ShuttleScore/Players.swift` (libellés Moi,
+  Partenaire, Adv. 1…) est partagé avec elle via `project.yml`. Reçoit les matchs par WatchConnectivity (`PhoneConnectivity`) ; la montre
   les envoie avec `WatchConnectivitySync`. Tests UI dans `ShuttleScorePhoneUITests/`
   (`make ui-test-phone`), avec `-UITests -SeedHistory` pour un historique pré-rempli.
 - `project.yml` : source de vérité du projet Xcode (XcodeGen).

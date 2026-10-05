@@ -5,6 +5,7 @@ import SwiftUI
 /// Stats calculées sur l'historique (voir SPEC.md, « Stats »).
 struct StatsView: View {
     let stats: MatchStats
+    let playerRecords: [PlayerRecord]
 
     var body: some View {
         Group {
@@ -31,10 +32,47 @@ struct StatsView: View {
                     Section("Simple ou double") {
                         FormatChart(singles: stats.singles, doubles: stats.doubles)
                     }
+                    Section {
+                        if playerRecords.isEmpty {
+                            Text("Nomme les joueurs d'un match depuis l'historique.")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ForEach(playerRecords, id: \.name) { player in
+                                PlayerRow(player: player)
+                            }
+                        }
+                    } header: {
+                        Text("Par joueur")
+                    } footer: {
+                        Text("Matchs terminés où le joueur est nommé.")
+                    }
                 }
             }
         }
         .navigationTitle("Stats")
+    }
+}
+
+/// Bilan avec et contre une personne.
+private struct PlayerRow: View {
+    let player: PlayerRecord
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(player.name).font(.headline)
+            HStack {
+                if player.with.wins + player.with.losses > 0 {
+                    Text("avec \(player.with.wins) V – \(player.with.losses) D")
+                }
+                if player.against.wins + player.against.losses > 0 {
+                    Text("contre \(player.against.wins) V – \(player.against.losses) D")
+                }
+            }
+            .font(.subheadline.monospacedDigit())
+            .foregroundStyle(.secondary)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("stats.player.\(player.name)")
     }
 }
 
@@ -187,5 +225,5 @@ private func percent(_ value: Double) -> String {
 }
 
 #Preview {
-    NavigationStack { StatsView(stats: MatchStats([])) }
+    NavigationStack { StatsView(stats: MatchStats([]), playerRecords: []) }
 }
