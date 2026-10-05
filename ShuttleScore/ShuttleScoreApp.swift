@@ -15,6 +15,7 @@ struct RootView: View {
     @State private var match: Match?
     /// Format à reprendre quand on annule avant le premier point (mauvais premier service).
     @State private var setupFormat: MatchFormat?
+    @State private var setupRules: ScoringRules?
     /// Séance HealthKit du match ; factice pendant les tests UI.
     @State private var workout = WorkoutTracker(
         session: ProcessInfo.processInfo.arguments.contains("-UITests")
@@ -43,15 +44,17 @@ struct RootView: View {
                     match: binding,
                     onUndoFirstService: {
                         setupFormat = current.format
+                        setupRules = current.rules
                         leave(current)
                     },
                     onNewMatch: {
                         setupFormat = nil
+                        setupRules = nil
                         leave(current)
                     })
             }
         } else {
-            SetupView(initialFormat: setupFormat) { newMatch in
+            SetupView(initialFormat: setupFormat, initialRules: setupRules) { newMatch in
                 match = newMatch
                 Task { await workout.matchStarted() }
             }

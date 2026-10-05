@@ -41,7 +41,7 @@ manipulation sur le simulateur ou la montre).
    HealthKit est refusé, le match se joue quand même, sans séance.
 8. **Sauvegarder** chaque match sur la montre (SwiftData) : joueurs, règles,
    journal de chaque échange (gagnant, serveur, horodatage) et statut (`terminé`
-   ou `interrompu`).
+   ou `interrompu`). Les matchs en 5 points ne sont **jamais** sauvegardés.
 9. **Reprendre** un match en cours après un crash ou la fermeture de l'app : il
    est persisté à chaque point et proposé à la reprise au relancement.
 10. **Arrêter** un match avant la fin : il est sauvegardé avec le statut
@@ -57,8 +57,9 @@ manipulation sur le simulateur ou la montre).
 - Stats et moyennes (pourcentage au service, séries, bilan par adversaire). Le
   journal point par point est conçu pour les calculer plus tard.
 - App iPhone compagnon, synchro iCloud, export.
-- Formats autres que le 3×15 dans l'UI (3×21, 5×11, formats libres). Le moteur
-  les accepte déjà en paramètre, mais aucun écran ne permet de les choisir.
+- Formats autres que le 3×15 et le 5 points en simple dans l'UI (3×21, 5×11,
+  formats libres, 5 points en double). Le moteur les accepte déjà en paramètre,
+  mais aucun écran ne permet de les choisir.
 - Saisie par le bouton Action de l'Ultra, complications, Smart Stack.
 - Matchs où Kévin ne joue pas (« Moi » est toujours dans un camp).
 - Fautes, lets, cartons et durée des pauses (aucun minuteur de 60 s).
@@ -104,6 +105,14 @@ HealthKit est bien signé avec une équipe personnelle au premier déploiement.
   camp atteint 8 ensuite.
 - Au **3e set**, **changement de côté** quand un camp atteint 8 pour la première
   fois (le même moment que la pause).
+
+### Simple en 5 points
+
+- Usage : petits matchs à 3 en attendant d'autres joueurs. Simple uniquement.
+- Un seul set, sec : le premier à 5 gagne, même à 5-4 (4-4 → 5-4 : fin du match).
+- Pas de pause. Service et positions suivent les règles du simple.
+- Jamais sauvegardé (ni stats, ni historique). La séance HealthKit tourne quand
+  même, pour garder l'app au premier plan : elle apparaît dans Santé.
 
 ### Service en simple
 
@@ -188,19 +197,24 @@ HealthKit est bien signé avec une équipe personnelle au premier déploiement.
 
 ## Découpage
 
-Une tranche verticale par `/feature`, dans cet ordre :
+Une tranche verticale par `/feature`, dans cet ordre. ✅ = livrée.
 
-1. **Score en simple** : moteur 3×15 dans `ShuttleCore` (sets, prolongation,
+1. ✅ **Score en simple** : moteur 3×15 dans `ShuttleCore` (sets, prolongation,
    plafond, fin de match, service et case en simple, annulation), écran de match
    coupé en deux, choix du premier serveur. Les joueurs sont nommés « Moi » et
    « Adversaire », rien n'est persisté.
-2. **Double** (le format principal au club) : rotation du service à 4 joueurs dans
+2. ✅ **Double** (le format principal au club) : rotation du service à 4 joueurs dans
    `ShuttleCore`, choix serveur et receveur à chaque set, affichage du serveur et
    de sa case.
-3. **Séance HealthKit** pendant le match, avec repli si l'accès est refusé.
-4. **Persistance** : sauvegarde du match et de son journal, statuts `terminé` et
-   `interrompu`, arrêt anticipé, reprise d'un match en cours au relancement.
-5. **Pause et changement de côté** à 8 points : retour haptique et message.
-6. **Liste de joueurs** : création, renommage et suppression, puis sélection
+3. ✅ **Séance HealthKit** pendant le match, avec repli si l'accès est refusé.
+4. ✅ **Positions sur le terrain** (ajout après test en match) : chaque joueur
+   dans sa case, vue depuis ma place.
+5. ✅ **Simple en 5 points** (ajout après test en match) : un set sec, jamais
+   sauvegardé.
+6. **Persistance** : sauvegarde du match et de son journal, statuts `terminé` et
+   `interrompu`, arrêt anticipé, reprise d'un match en cours au relancement
+   (hors matchs en 5 points, qui ne sont jamais proposés à la reprise).
+7. **Pause et changement de côté** à 8 points : retour haptique et message.
+8. **Liste de joueurs** : création, renommage et suppression, puis sélection
    au démarrage d'un match à la place de « Adversaire ».
-7. **Historique** des matchs.
+9. **Historique** des matchs.

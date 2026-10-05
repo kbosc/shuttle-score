@@ -12,10 +12,14 @@ struct MatchView: View {
     var body: some View {
         let state = match.state
         VStack(spacing: 0) {
-            SideHalf(side: .opponent, format: match.format, state: state) { score(.opponent) }
+            SideHalf(side: .opponent, format: match.format, rules: match.rules, state: state) {
+                score(.opponent)
+            }
             CenterBar(
-                state: state, undo: undo, onNewMatch: onNewMatch)
-            SideHalf(side: .me, format: match.format, state: state) { score(.me) }
+                state: state, rules: match.rules, undo: undo, onNewMatch: onNewMatch)
+            SideHalf(side: .me, format: match.format, rules: match.rules, state: state) {
+                score(.me)
+            }
         }
         .ignoresSafeArea(edges: .bottom)
     }
@@ -37,6 +41,7 @@ struct MatchView: View {
 private struct SideHalf: View {
     let side: Side
     let format: MatchFormat
+    let rules: ScoringRules
     let state: MatchState
     let action: () -> Void
 
@@ -52,8 +57,11 @@ private struct SideHalf: View {
                     .monospacedDigit()
                     .accessibilityIdentifier("match.score.\(side.identifier)")
                 if state.isOver {
-                    Text(setScores)
-                        .font(.caption2)
+                    // En un seul set, le gros chiffre montre déjà le score final.
+                    if !isSingleGame {
+                        Text(setScores)
+                            .font(.caption2)
+                    }
                 } else {
                     // Les deux cases du camp, dans l'ordre où je les vois depuis ma place.
                     HStack(spacing: 0) {
@@ -84,10 +92,15 @@ private struct SideHalf: View {
         .accessibilityIdentifier("match.half.\(side.identifier)")
     }
 
-    /// Pendant le match : les points du set en cours. Après : les sets gagnés.
+    /// Pendant le match : les points du set en cours. Après : les sets gagnés,
+    /// ou les points du set si le match se joue en un seul set (5 points).
     private var bigNumber: Int {
-        state.isOver ? state.gamesWon(by: side) : state.currentGame[side]
+        guard state.isOver else { return state.currentGame[side] }
+        if isSingleGame, let last = state.completedGames.last { return last[side] }
+        return state.gamesWon(by: side)
     }
+
+    private var isSingleGame: Bool { rules.gamesToWinMatch == 1 }
 
     /// En fin de match : les points de ce camp, set par set.
     private var setScores: String {
@@ -127,6 +140,7 @@ private struct CourtSlot: View {
 
 private struct CenterBar: View {
     let state: MatchState
+    let rules: ScoringRules
     let undo: () -> Void
     let onNewMatch: () -> Void
 
@@ -160,7 +174,7 @@ private struct CenterBar: View {
                 }
                 .accessibilityIdentifier("match.new")
             } else {
-                Text("Sets \(state.gamesWon(by: .me)) – \(state.gamesWon(by: .opponent))")
+                Text(progress)
                     .font(.footnote)
                     .monospacedDigit()
                     .lineLimit(1)
@@ -174,6 +188,13 @@ private struct CenterBar: View {
         .padding(.vertical, 4)
         .frame(height: Self.target.height + 8)
         .background(Color.black)
+    }
+
+    /// En un seul set (5 points), il n'y a pas de sets à compter : on rappelle le format.
+    private var progress: String {
+        rules.gamesToWinMatch == 1
+            ? "\(rules.pointsToWinGame) points"
+            : "Sets \(state.gamesWon(by: .me)) – \(state.gamesWon(by: .opponent))"
     }
 
     /// Cible minimale d'un bouton au doigt (recommandation Apple : 44 pt).

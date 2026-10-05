@@ -7,6 +7,7 @@ final class MatchFlowUITests: XCTestCase {
         let app = launchApp()
 
         app.buttons["setup.format.singles"].tap()
+        app.buttons["setup.rules.official"].tap()
         app.buttons["setup.firstServer.me"].tap()
 
         let me = app.buttons["match.half.me"]
@@ -40,6 +41,7 @@ final class MatchFlowUITests: XCTestCase {
     func testUndoButtonIsLargeEnoughToHitWithAFinger() {
         let app = launchApp()
         app.buttons["setup.format.singles"].tap()
+        app.buttons["setup.rules.official"].tap()
         app.buttons["setup.firstServer.me"].tap()
 
         let undo = app.buttons["match.undo"]
@@ -53,6 +55,7 @@ final class MatchFlowUITests: XCTestCase {
     func testFinalScoreStaysVisibleAfterTheMatch() {
         let app = launchApp()
         app.buttons["setup.format.singles"].tap()
+        app.buttons["setup.rules.official"].tap()
         app.buttons["setup.firstServer.me"].tap()
 
         let me = app.buttons["match.half.me"]
@@ -143,13 +146,48 @@ final class MatchFlowUITests: XCTestCase {
         expectCourt(app, "me", "screenRight", "Moi", "sert")
     }
 
-    /// Depuis le choix du serveur en simple, on peut revenir au choix simple ou double.
+    /// Depuis le choix 3×15 / 5 points du simple, on peut revenir au choix simple ou double.
     @MainActor
     func testSinglesSetupCanGoBackToTheFormatChoice() {
         let app = launchApp()
         app.buttons["setup.format.singles"].tap()
         app.buttons["setup.back"].tap()
         XCTAssertTrue(app.buttons["setup.format.doubles"].waitForExistence(timeout: 5))
+    }
+
+    /// Simple en 5 points : un seul set, sec, le score final reste affiché.
+    @MainActor
+    func testFivePointsSinglesEndsAtFiveFour() {
+        let app = launchApp()
+        app.buttons["setup.format.singles"].tap()
+        app.buttons["setup.rules.fivePoints"].tap()
+        // Retour depuis le choix du serveur : on retrouve le choix du format de points.
+        app.buttons["setup.back"].tap()
+        app.buttons["setup.rules.fivePoints"].tap()
+        // Mauvais serveur : annuler avant le premier point ramène au choix du serveur, en 5 points.
+        app.buttons["setup.firstServer.opponent"].tap()
+        let undo = app.buttons["match.undo"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 5))
+        undo.tap()
+        XCTAssertTrue(app.buttons["setup.firstServer.me"].waitForExistence(timeout: 5))
+        app.buttons["setup.firstServer.me"].tap()
+
+        let me = app.buttons["match.half.me"]
+        let opponent = app.buttons["match.half.opponent"]
+        XCTAssertTrue(me.waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["match.games"].label, "5 points")
+
+        for _ in 0..<4 {
+            me.tap()
+            opponent.tap()
+        }
+        me.tap()
+
+        XCTAssertEqual(app.staticTexts["match.result"].label, "Gagné")
+        // Seul le score reste dans chaque moitié : il devient le libellé de la moitié.
+        XCTAssertEqual(me.label, "5")
+        XCTAssertEqual(opponent.label, "4")
+        attachScreenshot(named: "Fin d'un 5 points", of: app)
     }
 
     /// Vérifie qui occupe une case, vue depuis ma place, et son rôle (« sert », « reçoit » ou rien).
