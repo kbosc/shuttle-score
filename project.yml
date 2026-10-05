@@ -40,6 +40,7 @@ targets:
       base:
         # Embarquée dans l'app iPhone : son identifiant doit commencer par celui de l'iPhone.
         PRODUCT_BUNDLE_IDENTIFIER: fr.kbosc.ShuttleScore.watchkitapp
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_VERSION: "6.0"
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: ShuttleScore
@@ -79,6 +80,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: fr.kbosc.ShuttleScore
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_VERSION: "6.0"
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: ShuttleScore
