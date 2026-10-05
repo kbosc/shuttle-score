@@ -20,6 +20,7 @@ struct ShuttleScorePhoneApp: App {
 @Observable
 final class HistoryModel {
     private(set) var summaries: [MatchSummary] = []
+    private(set) var stats = MatchStats([])
     private let store: (any HistorySource)?
     private var connectivity: PhoneConnectivity?
 
@@ -29,7 +30,9 @@ final class HistoryModel {
     }
 
     func reload() {
-        summaries = (try? store?.history().map(MatchSummary.init)) ?? []
+        let records = (try? store?.history()) ?? []
+        summaries = records.map(MatchSummary.init)
+        stats = MatchStats(records)
     }
 
     /// Stockage de l'app ; en tests UI, un stockage en mémoire, pré-rempli avec `-SeedHistory`.

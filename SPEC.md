@@ -242,6 +242,10 @@ HealthKit est bien signé avec une équipe personnelle au premier déploiement.
 - En double, « mon camp » compte (Moi et Partenaire ensemble).
 - Évolution par semaine : victoires et défaites par semaine (lundi au dimanche).
 - Simple contre double : les mêmes chiffres, séparés par format.
+- Affichage : écran Stats ouvert depuis l'historique ; une valeur sans donnée
+  (aucun match terminé, aucun échange servi) s'affiche « — » et n'a pas de barre,
+  pour ne pas être confondue avec 0 %. Le graphique par semaine montre les 12
+  dernières semaines où un match a été terminé.
 
 ### Noms après coup (sur l'iPhone)
 
@@ -281,7 +285,7 @@ Une tranche verticale par `/feature`, dans cet ordre. ✅ = livrée.
 9. ✅ **App iPhone et synchro** : app iPhone compagnon, envoi des matchs terminés
    et interrompus depuis la montre, historique sur l'iPhone (MVP n°11 et 12).
    Remplace l'historique sur la montre.
-10. **Stats et graphiques** : calculs dans `ShuttleCore`, graphiques Swift Charts
+10. ✅ **Stats et graphiques** : calculs dans `ShuttleCore`, graphiques Swift Charts
     (MVP n°13).
 11. **Nommer les joueurs après coup** sur l'iPhone, avec suggestion des noms déjà
     utilisés, puis bilan par joueur (MVP n°14).

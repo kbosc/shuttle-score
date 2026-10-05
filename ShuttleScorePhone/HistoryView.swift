@@ -19,6 +19,14 @@ struct HistoryView: View {
             }
         }
         .navigationTitle("Matchs")
+        .toolbar {
+            NavigationLink {
+                StatsView(stats: model.stats)
+            } label: {
+                Label("Stats", systemImage: "chart.bar.xaxis")
+            }
+            .accessibilityIdentifier("history.stats")
+        }
         .refreshable { model.reload() }
     }
 }
