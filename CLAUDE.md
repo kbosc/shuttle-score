@@ -66,3 +66,5 @@ features sont dans `SPEC.md` : c'est la référence, ne la recopie pas ici.
 - Quand faire quoi (sauvegarder, reprendre, arrêter la séance) se décide dans
   `MatchRecorder` et `WorkoutTracker` (`ShuttleCore`), testés avec des faux ; l'app ne
   fait que les appeler depuis `RootView`.
+- Dans un test UI qui joue un set au-delà de 8 points, marque les points avec
+  `score(_:in:)` : il ferme le message « Pause », qui sinon intercepte le tap suivant.

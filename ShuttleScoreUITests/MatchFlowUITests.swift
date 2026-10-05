@@ -64,11 +64,11 @@ final class MatchFlowUITests: XCTestCase {
 
         // Set 1 : 15-13. Set 2 : 15-0.
         for _ in 0..<13 {
-            me.tap()
-            opponent.tap()
+            score(me, in: app)
+            score(opponent, in: app)
         }
-        for _ in 0..<2 { me.tap() }
-        for _ in 0..<15 { me.tap() }
+        for _ in 0..<2 { score(me, in: app) }
+        for _ in 0..<15 { score(me, in: app) }
 
         XCTAssertEqual(app.staticTexts["match.result"].label, "Gagné")
         XCTAssertEqual(app.staticTexts["match.score.me"].label, "2")
@@ -107,7 +107,7 @@ final class MatchFlowUITests: XCTestCase {
         attachScreenshot(named: "Double, A2 sert", of: app)
 
         // Je gagne le set 1 (15-1) : le set 2 demande mon serveur.
-        for _ in 0..<14 { me.tap() }
+        for _ in 0..<14 { score(me, in: app) }
         let partner = app.buttons["choice.server.partner"]
         XCTAssertTrue(partner.waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["choice.server.opponent1"].exists)
@@ -257,6 +257,47 @@ final class MatchFlowUITests: XCTestCase {
         relaunch(app)
         XCTAssertTrue(app.buttons["setup.format.singles"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["resume.continue"].exists)
+    }
+
+    /// À 8 points, « Pause » s'affiche ; le tap qui ferme le message ne marque pas de point.
+    @MainActor
+    func testThePauseIsAnnouncedAtEightAndDismissedWithoutScoring() {
+        let app = launchApp()
+        startSingles(app, rules: "official")
+        let me = app.buttons["match.half.me"]
+        XCTAssertTrue(me.waitForExistence(timeout: 5))
+        for _ in 0..<7 { me.tap() }
+        let announcement = app.buttons["match.announcement"]
+        XCTAssertFalse(announcement.exists)
+
+        me.tap()
+        XCTAssertTrue(announcement.waitForExistence(timeout: 3))
+        XCTAssertTrue(announcement.label.contains("Pause"))
+        attachScreenshot(named: "Pause à 8", of: app)
+        // Sans tap, le message se ferme tout seul.
+        XCTAssertTrue(announcement.waitForNonExistence(timeout: 8))
+
+        // Annuler puis remarquer le 8e point : la pause est de nouveau annoncée.
+        app.buttons["match.undo"].tap()
+        me.tap()
+        XCTAssertTrue(announcement.waitForExistence(timeout: 3))
+        announcement.tap()
+        XCTAssertTrue(announcement.waitForNonExistence(timeout: 3))
+        XCTAssertEqual(app.staticTexts["match.score.me"].label, "8")
+
+        // 9e point marqué par erreur puis annulé : on revient à 8, sans seconde pause.
+        me.tap()
+        app.buttons["match.undo"].tap()
+        XCTAssertEqual(app.staticTexts["match.score.me"].label, "8")
+        XCTAssertFalse(announcement.waitForExistence(timeout: 2))
+    }
+
+    /// Marque un point, puis ferme la pause si ce point l'a déclenchée (elle recouvre l'écran).
+    @MainActor
+    private func score(_ half: XCUIElement, in app: XCUIApplication) {
+        half.tap()
+        let announcement = app.buttons["match.announcement"]
+        if announcement.exists { announcement.tap() }
     }
 
     @MainActor

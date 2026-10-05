@@ -103,6 +103,14 @@ public enum MatchEvent: Codable, Equatable, Sendable {
     case serviceChoice(ServiceChoice)
 }
 
+/// Ce que l'app doit annoncer après un échange.
+public enum Announcement: Equatable, Sendable {
+    /// Un camp atteint le score de pause pour la première fois du set.
+    case interval
+    /// Même chose au set décisif : la pause s'accompagne d'un changement de côté.
+    case intervalAndChangeOfEnds
+}
+
 /// Photographie du match, calculée à partir du journal.
 public struct MatchState: Equatable, Sendable {
     public let completedGames: [GameScore]
@@ -118,6 +126,8 @@ public struct MatchState: Equatable, Sendable {
     /// Qui occupe chaque case, vue depuis son propre camp. Vide hors d'un set
     /// (service à choisir, match terminé). En simple, un camp n'occupe qu'une case.
     public let positions: [Side: [ServiceCourt: Player]]
+    /// Annonce déclenchée par l'échange qui vient d'être joué, s'il y en a une.
+    public let announcement: Announcement?
     public let winner: Side?
 
     public var isOver: Bool { winner != nil }
@@ -224,8 +234,11 @@ public struct Match: Codable, Sendable {
         var rotation: Rotation? = Rotation(firstService, format: format)
         var awaiting: Side?
         var winner: Side?
+        var announcement: Announcement?
 
         for event in events {
+            // Une annonce ne concerne que l'échange qui vient d'être joué.
+            announcement = nil
             switch event {
             case .serviceChoice(let choice):
                 rotation = Rotation(choice, format: format)
@@ -233,6 +246,13 @@ public struct Match: Codable, Sendable {
             case .rally(let side):
                 game[side] += 1
                 rotation?.rallyWon(by: side, newScore: game[side])
+                // Premier camp du set à atteindre le score de pause (l'autre est encore en dessous).
+                if let intervalAt = rules.intervalAt, game[side] == intervalAt,
+                    game[side.opposite] < intervalAt
+                {
+                    let isDecidingGame = completedGames.count == 2 * (rules.gamesToWinMatch - 1)
+                    announcement = isDecidingGame ? .intervalAndChangeOfEnds : .interval
+                }
                 guard rules.isGameWon(game, by: side) else { continue }
                 completedGames.append(game)
                 game = GameScore(me: 0, opponent: 0)
@@ -259,7 +279,7 @@ public struct Match: Codable, Sendable {
             completedGames: completedGames, currentGame: game, servingSide: service?.server.side,
             server: service?.server, receiver: service?.receiver, serviceCourt: service?.court,
             awaitingServiceChoice: awaiting, positions: rotation?.positions(score: game) ?? [:],
-            winner: winner)
+            announcement: announcement, winner: winner)
     }
 
     /// Ignoré si le match est terminé ou si le service du set reste à choisir.

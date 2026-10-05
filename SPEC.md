@@ -105,6 +105,11 @@ HealthKit est bien signé avec une équipe personnelle au premier déploiement.
   camp atteint 8 ensuite.
 - Au **3e set**, **changement de côté** quand un camp atteint 8 pour la première
   fois (le même moment que la pause).
+- À l'écran : vibration distincte de celle d'un point et message plein écran
+  « Pause » (« Pause · Changez de côté » au 3e set). Un tap le ferme **sans marquer
+  de point** ; sinon il se ferme seul après 5 secondes. L'annonce suit l'action de
+  marquer : annuler le 8e point puis le remarquer la redéclenche, mais annuler un 9e
+  point (retour à 8) ne la relance pas.
 
 ### Simple en 5 points
 
@@ -229,7 +234,7 @@ Une tranche verticale par `/feature`, dans cet ordre. ✅ = livrée.
 6. ✅ **Persistance** : sauvegarde du match et de son journal, statuts `terminé` et
    `interrompu`, arrêt anticipé, reprise d'un match en cours au relancement
    (hors matchs en 5 points, qui ne sont jamais proposés à la reprise).
-7. **Pause et changement de côté** à 8 points : retour haptique et message.
+7. ✅ **Pause et changement de côté** à 8 points : retour haptique et message.
 8. **Liste de joueurs** : création, renommage et suppression, puis sélection
    au démarrage d'un match à la place de « Adversaire ».
 9. **Historique** des matchs.

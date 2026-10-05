@@ -11,6 +11,8 @@ struct MatchView: View {
     let onStop: () -> Void
     let onNewMatch: () -> Void
     @State private var confirmsStop = false
+    /// Annonce affichée (pause à 8 points) jusqu'à un tap ou 5 secondes.
+    @State private var shownAnnouncement: Announcement?
 
     var body: some View {
         let state = match.state
@@ -26,6 +28,16 @@ struct MatchView: View {
             }
         }
         .ignoresSafeArea(edges: .bottom)
+        .overlay {
+            if let announcement = shownAnnouncement {
+                AnnouncementOverlay(announcement: announcement) { shownAnnouncement = nil }
+            }
+        }
+        .task(id: shownAnnouncement) {
+            guard shownAnnouncement != nil else { return }
+            try? await Task.sleep(for: .seconds(5))
+            if !Task.isCancelled { shownAnnouncement = nil }
+        }
         // Confirmation : un tap raté en plein match ne doit pas l'arrêter.
         .confirmationDialog("Arrêter le match ?", isPresented: $confirmsStop) {
             Button("Arrêter le match", role: .destructive, action: onStop)
@@ -42,8 +54,20 @@ struct MatchView: View {
     }
 
     private func score(_ side: Side) {
-        match.recordRally(wonBy: side)
-        WKInterfaceDevice.current().play(.click)
+        // On travaille sur une copie : relire le binding juste après l'écriture
+        // renverrait encore l'ancien match (valeur capturée au dernier rendu).
+        var updated = match
+        updated.recordRally(wonBy: side)
+        match = updated
+        // L'annonce suit l'action de marquer, jamais une annulation : revenir sur le 8e
+        // point en annulant le 9e ne doit pas relancer la pause.
+        if let announcement = updated.state.announcement {
+            shownAnnouncement = announcement
+            // Vibration distincte de celle d'un point : on la sent sans regarder la montre.
+            WKInterfaceDevice.current().play(.notification)
+        } else {
+            WKInterfaceDevice.current().play(.click)
+        }
     }
 }
 
@@ -114,6 +138,35 @@ private struct SideHalf: View {
     /// En fin de match : les points de ce camp, set par set.
     private var setScores: String {
         state.completedGames.map { "\($0[side])" }.joined(separator: " · ")
+    }
+}
+
+/// Message plein écran de la pause. Un tap le ferme sans marquer de point.
+private struct AnnouncementOverlay: View {
+    let announcement: Announcement
+    let dismiss: () -> Void
+
+    var body: some View {
+        Button(action: dismiss) {
+            VStack(spacing: 6) {
+                Image(systemName: "pause.circle.fill")
+                    .font(.system(size: 40))
+                    .foregroundStyle(Color.serving)
+                Text("Pause")
+                    .font(.title2.weight(.bold))
+                if announcement == .intervalAndChangeOfEnds {
+                    Text("Changez de côté")
+                        .font(.headline)
+                        .foregroundStyle(Color.serving)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.black.opacity(0.92))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .ignoresSafeArea()
+        .accessibilityIdentifier("match.announcement")
     }
 }
 
