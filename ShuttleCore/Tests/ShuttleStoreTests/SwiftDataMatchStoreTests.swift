@@ -66,4 +66,17 @@ import Testing
         #expect(reloaded?.match.id == saved.id)
         #expect(reloaded?.match.state == saved.state)
     }
+
+    @Test func theHistoryListsFinishedAndInterruptedMatchesNewestFirst() throws {
+        let store = try SwiftDataMatchStore(inMemory: true)
+        let oldest = match(points: 30, startedAt: Date(timeIntervalSince1970: 1_000))
+        let newest = match(points: 4, startedAt: Date(timeIntervalSince1970: 3_000))
+        let inProgress = match(points: 2, startedAt: Date(timeIntervalSince1970: 4_000))
+        try store.save(MatchRecord(match: oldest, status: .finished))
+        try store.save(MatchRecord(match: newest, status: .interrupted))
+        try store.save(MatchRecord(match: inProgress, status: .inProgress))
+        let history = try store.history()
+        #expect(history.map(\.match.id) == [newest.id, oldest.id])
+        #expect(history.map(\.status) == [.interrupted, .finished])
+    }
 }

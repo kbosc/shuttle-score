@@ -26,7 +26,10 @@ struct RootView: View {
             ? NoWorkoutSession() : HealthKitWorkoutSession())
 
     init() {
-        let recorder = MatchRecorder(store: Self.makeStore())
+        // Les tests UI n'envoient rien à l'iPhone.
+        let sync: (any MatchSync)? =
+            ProcessInfo.processInfo.arguments.contains("-UITests") ? nil : WatchConnectivitySync()
+        let recorder = MatchRecorder(store: Self.makeStore(), sync: sync)
         _recorder = State(initialValue: recorder)
         _pendingResume = State(initialValue: recorder.resumableMatch())
     }

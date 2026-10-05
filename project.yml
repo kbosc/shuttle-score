@@ -5,6 +5,7 @@ options:
   bundleIdPrefix: fr.kbosc
   deploymentTarget:
     watchOS: "26.0"
+    iOS: "26.0"
 settings:
   base:
     # Équipe personnelle (compte gratuit) de Kévin : signature automatique sur sa montre.
@@ -37,12 +38,15 @@ targets:
         com.apple.developer.healthkit.access: []
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: fr.kbosc.ShuttleScore
+        # Embarquée dans l'app iPhone : son identifiant doit commencer par celui de l'iPhone.
+        PRODUCT_BUNDLE_IDENTIFIER: fr.kbosc.ShuttleScore.watchkitapp
         SWIFT_VERSION: "6.0"
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: ShuttleScore
-        INFOPLIST_KEY_WKWatchOnly: YES
         INFOPLIST_KEY_WKApplication: YES
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: fr.kbosc.ShuttleScore
+        # Utilisable sans l'iPhone pendant le match.
+        INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp: YES
         INFOPLIST_KEY_NSHealthShareUsageDescription: "ShuttleScore lit ta fréquence cardiaque et tes calories pendant le match."
         INFOPLIST_KEY_NSHealthUpdateUsageDescription: "ShuttleScore enregistre tes matchs comme séances de badminton dans Santé."
         SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
@@ -58,7 +62,46 @@ targets:
         SWIFT_VERSION: "6.0"
         GENERATE_INFOPLIST_FILE: YES
         SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+  ShuttleScorePhone:
+    type: application
+    platform: iOS
+    sources: [ShuttleScorePhone]
+    dependencies:
+      - package: ShuttleCore
+        product: ShuttleCore
+      - package: ShuttleCore
+        product: ShuttleStore
+      # L'app montre est livrée dans l'app iPhone.
+      - target: ShuttleScore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: fr.kbosc.ShuttleScore
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: ShuttleScore
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+  ShuttleScorePhoneUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [ShuttleScorePhoneUITests]
+    dependencies:
+      - target: ShuttleScorePhone
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: fr.kbosc.ShuttleScorePhoneUITests
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
 schemes:
+  ShuttleScorePhone:
+    build:
+      targets:
+        ShuttleScorePhone: all
+    test:
+      targets: [ShuttleScorePhoneUITests]
   ShuttleScore:
     build:
       targets:

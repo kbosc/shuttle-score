@@ -84,6 +84,20 @@ public final class SwiftDataMatchStore: MatchStore {
             match: try JSONDecoder().decode(Match.self, from: stored.payload), status: .inProgress)
     }
 
+    /// Historique : matchs terminés et interrompus, du plus récent au plus ancien.
+    public func history() throws -> [MatchRecord] {
+        let inProgress = MatchStatus.inProgress.rawValue
+        let descriptor = FetchDescriptor<StoredMatch>(
+            predicate: #Predicate { $0.status != inProgress },
+            sortBy: [SortDescriptor(\.startedAt, order: .reverse)])
+        return try context.fetch(descriptor).compactMap { stored in
+            guard let status = MatchStatus(rawValue: stored.status),
+                let match = try? JSONDecoder().decode(Match.self, from: stored.payload)
+            else { return nil }
+            return MatchRecord(match: match, status: status)
+        }
+    }
+
     /// Efface tout (tests UI : chaque test démarre sans match sauvegardé).
     public func deleteAll() throws {
         try context.delete(model: StoredMatch.self)

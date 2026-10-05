@@ -180,7 +180,7 @@ public struct RallyRecord: Equatable, Sendable {
 /// Un match : les réglages de départ plus le journal des événements.
 /// L'état n'est jamais stocké, il est recalculé en rejouant le journal.
 /// `Codable` : c'est ce qui est sauvegardé sur la montre.
-public struct Match: Codable, Sendable {
+public struct Match: Codable, Equatable, Sendable {
     public let id: UUID
     public let startedAt: Date
     public let rules: ScoringRules

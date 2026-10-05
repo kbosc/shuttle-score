@@ -278,7 +278,7 @@ Une tranche verticale par `/feature`, dans cet ordre. ✅ = livrée.
    set d'un double, Adv. 1 est l'adversaire qui reçoit (si mon camp sert) ou qui
    sert (si les adversaires servent) ; une question de moins au démarrage, et un
    rappel de la convention à l'écran.
-9. **App iPhone et synchro** : app iPhone compagnon, envoi des matchs terminés
+9. ✅ **App iPhone et synchro** : app iPhone compagnon, envoi des matchs terminés
    et interrompus depuis la montre, historique sur l'iPhone (MVP n°11 et 12).
    Remplace l'historique sur la montre.
 10. **Stats et graphiques** : calculs dans `ShuttleCore`, graphiques Swift Charts

@@ -1,7 +1,8 @@
 # ShuttleScore
 
-App Apple Watch (watchOS 26 minimum, autonome) de suivi de score de badminton en 3×15,
-en simple et en double. Le périmètre, les règles métier et le découpage des
+App Apple Watch (watchOS 26 minimum, utilisable sans l'iPhone) de suivi de score de
+badminton en 3×15, en simple et en double, avec une app iPhone compagnon (iOS 26) qui
+reçoit les matchs et affiche historique et stats. Le périmètre, les règles métier et le découpage des
 features sont dans `SPEC.md` : c'est la référence, ne la recopie pas ici.
 
 ## Commandes
@@ -9,7 +10,7 @@ features sont dans `SPEC.md` : c'est la référence, ne la recopie pas ici.
 - `make verify` : lint swift-format + build + tests du package (`ShuttleCore` et `ShuttleStore`), en ~15 s. Doit passer avant de finir une tâche.
 - `make format` : reformate le code en place.
 - `make project` : régénère `ShuttleScore.xcodeproj` depuis `project.yml`.
-- `make app` : build complet de l'app sur simulateur watchOS. Lent, tourne en CI.
+- `make app` : build complet des apps montre et iPhone sur simulateur. Lent, tourne en CI.
 - `make ui-test` : tests de bout en bout XCUITest sur simulateur Apple Watch Ultra (~1 min). Lent, tourne en CI.
   Les éléments testés sont repérés par `accessibilityIdentifier` (`match.half.me`, `match.undo`, …).
 
@@ -26,6 +27,10 @@ features sont dans `SPEC.md` : c'est la référence, ne la recopie pas ici.
 - `ShuttleScore/` : app watchOS en SwiftUI. Une UI fine qui appelle `ShuttleCore`.
   La séance HealthKit (`HealthKitWorkoutSession`) vit ici.
 - `ShuttleScoreUITests/` : tests de bout en bout du parcours principal.
+- `ShuttleScorePhone/` : app iPhone (historique, plus tard stats), qui embarque l'app
+  montre. Reçoit les matchs par WatchConnectivity (`PhoneConnectivity`) ; la montre
+  les envoie avec `WatchConnectivitySync`. Tests UI dans `ShuttleScorePhoneUITests/`
+  (`make ui-test-phone`), avec `-UITests -SeedHistory` pour un historique pré-rempli.
 - `project.yml` : source de vérité du projet Xcode (XcodeGen).
 
 ## Pièges
@@ -68,3 +73,15 @@ features sont dans `SPEC.md` : c'est la référence, ne la recopie pas ici.
   fait que les appeler depuis `RootView`.
 - Dans un test UI qui joue un set au-delà de 8 points, marque les points avec
   `score(_:in:)` : il ferme le message « Pause », qui sinon intercepte le tap suivant.
+- Identifiants : l'app iPhone est `fr.kbosc.ShuttleScore`, l'app montre
+  `fr.kbosc.ShuttleScore.watchkitapp` (préfixe imposé par l'embarquement).
+- La synchro réelle montre → iPhone (WatchConnectivity) ne se teste que sur les vrais
+  appareils ; sa logique (quoi envoyer, comment l'appliquer) est testée dans
+  `ShuttleCore` (`SyncTests`).
+- Simulateurs : un simulateur qui démarre pour la première fois peut dépasser le délai
+  des tests UI ; les cibles `ui-test` le démarrent d'abord (`simctl bootstatus -b`).
+  Ne lance pas les tests UI montre et iPhone en parallèle.
+- Compte gratuit : watchOS **refuse** d'installer l'app montre via l'iPhone (app Watch)
+  — « free provisioning profile … not allowed to be installed from this source ». Elle
+  ne s'installe que directement depuis Xcode (schéma `ShuttleScore`, destination la
+  montre). L'app iPhone, elle, s'installe normalement par câble.

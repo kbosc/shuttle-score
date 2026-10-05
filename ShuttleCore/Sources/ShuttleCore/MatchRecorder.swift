@@ -7,7 +7,7 @@ public enum MatchStatus: String, Codable, Sendable {
 }
 
 /// Un match tel qu'il est sauvegardé : le match lui-même et son statut.
-public struct MatchRecord: Sendable {
+public struct MatchRecord: Codable, Equatable, Sendable {
     public let match: Match
     public let status: MatchStatus
 
@@ -27,13 +27,22 @@ public protocol MatchStore: AnyObject {
     func latestInProgress() throws -> MatchRecord?
 }
 
+/// Envoi des matchs de la montre vers l'iPhone (WatchConnectivity dans l'app, faux en test).
+@MainActor
+public protocol MatchSync: AnyObject {
+    func send(_ message: SyncMessage)
+}
+
 /// Décide quoi sauvegarder et quand. Une erreur de sauvegarde n'empêche jamais de jouer.
 @MainActor
 public final class MatchRecorder {
     private let store: any MatchStore
+    private let sync: (any MatchSync)?
 
-    public init(store: any MatchStore) {
+    /// `sync` : envoi à l'iPhone des matchs terminés, interrompus ou supprimés.
+    public init(store: any MatchStore, sync: (any MatchSync)? = nil) {
         self.store = store
+        self.sync = sync
     }
 
     /// À appeler après chaque changement du match (point, annulation, choix du service).
@@ -57,8 +66,12 @@ public final class MatchRecorder {
         do {
             if match.events.isEmpty {
                 try store.delete(matchID: match.id)
+                sync?.send(.delete(matchID: match.id))
             } else {
-                try store.save(MatchRecord(match: match, status: status))
+                let record = MatchRecord(match: match, status: status)
+                try store.save(record)
+                // L'iPhone ne reçoit que les matchs finis ou arrêtés, pas chaque point.
+                if status != .inProgress { sync?.send(.upsert(record)) }
             }
         } catch {
             // Sauvegarde ratée : le match continue, il ne sera simplement pas repris.

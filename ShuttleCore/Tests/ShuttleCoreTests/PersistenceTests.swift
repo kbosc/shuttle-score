@@ -50,24 +50,6 @@ private let t0 = Date(timeIntervalSince1970: 1_800_000_000)
 }
 
 @MainActor
-private final class InMemoryStore: MatchStore {
-    var records: [UUID: MatchRecord] = [:]
-    var failsOnSave = false
-
-    func save(_ record: MatchRecord) throws {
-        if failsOnSave { throw CocoaError(.fileWriteUnknown) }
-        records[record.match.id] = record
-    }
-
-    func delete(matchID: UUID) throws { records[matchID] = nil }
-
-    func latestInProgress() throws -> MatchRecord? {
-        records.values.filter { $0.status == .inProgress }
-            .max { $0.match.startedAt < $1.match.startedAt }
-    }
-}
-
-@MainActor
 @Suite struct Recorder {
     private func singles(_ points: [Side], rules: ScoringRules = .threeByFifteen) -> Match {
         var match = Match(rules: rules, firstServer: .me)

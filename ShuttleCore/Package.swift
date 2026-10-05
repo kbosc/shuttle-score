@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "ShuttleCore",
-    platforms: [.macOS("15.0"), .watchOS("26.0")],
+    platforms: [.macOS("15.0"), .watchOS("26.0"), .iOS("26.0")],
     products: [
         .library(name: "ShuttleCore", targets: ["ShuttleCore"]),
         .library(name: "ShuttleStore", targets: ["ShuttleStore"]),
