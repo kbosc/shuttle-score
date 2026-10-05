@@ -13,7 +13,10 @@ match, il indique le format et qui sert en premier, en quelques taps. Entre
 deux échanges, en sueur et la raquette dans l'autre main, il tape une moitié de
 l'écran pour donner le point à son camp ou au camp adverse. La montre affiche le
 score, qui sert et depuis quelle case. Si un point est mal saisi, il l'annule d'un
-geste. À la fin, le match est sauvegardé point par point sur la montre.
+geste. À la fin, le match est sauvegardé point par point sur la montre, puis
+envoyé à l'iPhone. Plus tard, au calme, Kévin ouvre l'app iPhone : il retrouve ses
+matchs, ses stats en graphiques, et peut, s'il s'en souvient, nommer les joueurs
+d'un match. La montre sert au match, l'iPhone à tout le reste.
 
 ## MVP
 
@@ -46,17 +49,26 @@ manipulation sur le simulateur ou la montre).
    est persisté à chaque point et proposé à la reprise au relancement.
 10. **Arrêter** un match avant la fin : il est sauvegardé avec le statut
     `interrompu`.
-11. **Historique** : la liste des matchs passés (date, joueurs, score par set,
-    statut).
+11. **Synchro vers l'iPhone** : chaque match terminé ou interrompu est envoyé à
+    l'app iPhone, même si l'iPhone n'est pas à portée à ce moment-là (envoi mis en
+    file d'attente).
+12. **Historique sur l'iPhone** : la liste des matchs, du plus récent au plus
+    ancien (date, format, score par set, statut). La montre n'a pas d'historique.
+13. **Stats et graphiques sur l'iPhone** : victoires et défaites, pourcentage de
+    points gagnés au service et à la réception, évolution par semaine, simple
+    contre double (voir Règles métier, « Stats »).
+14. **Nommer les joueurs après coup** sur l'iPhone, match par match, si on s'en
+    souvient. Facultatif : un match sans noms reste valable.
 
 ## Hors périmètre
 
-- Stats et moyennes (pourcentage au service, séries, bilan par adversaire). Le
-  journal point par point est conçu pour les calculer plus tard.
-- Noms des joueurs (liste de joueurs, choix au démarrage). Abandonné après test
-  en match : chaque tap avant le match coûte sur le terrain. Les joueurs restent
-  Moi, Partenaire, Adv. 1 et Adv. 2 (voir Règles métier, « Joueurs »).
-- App iPhone compagnon, synchro iCloud, export.
+- Noms des joueurs **sur la montre** (liste, choix au démarrage). Abandonné après
+  test en match : chaque tap avant le match coûte sur le terrain. Sur la montre, les
+  joueurs restent Moi, Partenaire, Adv. 1 et Adv. 2 ; les noms se donnent après coup
+  sur l'iPhone (MVP n°14).
+- Synchro iCloud (compte développeur payant), export, partage des stats.
+- Modifier le score d'un match depuis l'iPhone : l'iPhone ne fait que lire et
+  nommer.
 - Formats autres que le 3×15 et le 5 points en simple dans l'UI (3×21, 5×11,
   formats libres, 5 points en double). Le moteur les accepte déjà en paramètre,
   mais aucun écran ne permet de les choisir.
@@ -68,7 +80,10 @@ manipulation sur le simulateur ou la montre).
 
 | Choix | Raison |
 |---|---|
-| App **watchOS autonome**, SwiftUI, Swift 6 (concurrence stricte), cible watchOS 26 minimum (l’iPhone de Kévin est en iOS 26) | Une app watchOS est forcément en Swift. Pas de compagnon iPhone, donc une seule UI. |
+| App **watchOS**, SwiftUI, Swift 6 (concurrence stricte), cible watchOS 26 minimum (l’iPhone de Kévin est en iOS 26) | Une app watchOS est forcément en Swift. Elle reste utilisable sans l'iPhone pendant le match. |
+| App **iPhone compagnon**, SwiftUI, iOS 26 minimum | Les stats ont besoin d'un vrai écran. Installation par câble, fiable, contrairement à la montre. |
+| **WatchConnectivity** (`transferUserInfo` ou `transferFile`) | Canal officiel et gratuit montre → iPhone, avec file d'attente : rien à gérer si l'iPhone est loin. |
+| **Swift Charts** | Graphiques natifs, déclaratifs. |
 | **`ShuttleCore`**, Swift Package local, sans UI ni framework Apple | Porte toutes les règles métier. Ses tests tournent avec `swift test` sur le Mac en quelques secondes, sans simulateur. |
 | Score modélisé en **event sourcing** : réglages initiaux + liste des échanges, état calculé par une fonction pure | L'annulation revient à retirer le dernier échange. Le journal est exactement ce que demandent les stats futures. Il n'y a pas d'état incohérent possible. |
 | **SwiftData** pour la persistance | API native. Les données survivent au redémarrage, pas à une désinstallation (accepté). |
@@ -216,6 +231,29 @@ HealthKit est bien signé avec une équipe personnelle au premier déploiement.
 - À partir du 2e set, Adv. 1 et Adv. 2 restent les mêmes personnes qu'au 1er set :
   le choix du serveur et du receveur se fait comme avant.
 
+### Stats (sur l'iPhone)
+
+- Seuls les matchs **terminés** comptent dans les victoires et défaites ; les
+  matchs interrompus apparaissent dans l'historique et leurs points comptent dans
+  les pourcentages. Les 5 points n'existent pas côté iPhone (jamais sauvegardés).
+- Points gagnés au service = échanges servis par mon camp et gagnés par mon camp,
+  divisés par les échanges servis par mon camp. Même calcul à la réception.
+  - Exemple : 40 échanges servis par mon camp, 26 gagnés → 65 % au service.
+- En double, « mon camp » compte (Moi et Partenaire ensemble).
+- Évolution par semaine : victoires et défaites par semaine (lundi au dimanche).
+- Simple contre double : les mêmes chiffres, séparés par format.
+
+### Noms après coup (sur l'iPhone)
+
+- Pour un match, on peut nommer Partenaire, Adversaire, Adv. 1 et Adv. 2. Chaque
+  nom est facultatif.
+- L'écran rappelle la convention : Adv. 1 est celui qui a reçu (si mon camp a servi
+  en premier) ou servi (si les adversaires ont servi en premier) le premier échange.
+- Les noms déjà utilisés sont proposés. Espaces retirés aux bords ; « Lucas » et
+  « lucas » sont la même personne.
+- Les noms restent sur l'iPhone : ils ne sont ni renvoyés à la montre, ni dans le
+  dépôt Git.
+
 ## Découpage
 
 Une tranche verticale par `/feature`, dans cet ordre. ✅ = livrée.
@@ -240,4 +278,10 @@ Une tranche verticale par `/feature`, dans cet ordre. ✅ = livrée.
    set d'un double, Adv. 1 est l'adversaire qui reçoit (si mon camp sert) ou qui
    sert (si les adversaires servent) ; une question de moins au démarrage, et un
    rappel de la convention à l'écran.
-9. **Historique** des matchs.
+9. **App iPhone et synchro** : app iPhone compagnon, envoi des matchs terminés
+   et interrompus depuis la montre, historique sur l'iPhone (MVP n°11 et 12).
+   Remplace l'historique sur la montre.
+10. **Stats et graphiques** : calculs dans `ShuttleCore`, graphiques Swift Charts
+    (MVP n°13).
+11. **Nommer les joueurs après coup** sur l'iPhone, avec suggestion des noms déjà
+    utilisés, puis bilan par joueur (MVP n°14).
