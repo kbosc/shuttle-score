@@ -9,7 +9,7 @@ depuis quelle case, et rien ne garde de trace des matchs pour en tirer des stats
 
 Kévin joue en club, en simple ou en double, presque toujours avec les mêmes
 personnes. Il porte une Apple Watch Ultra 2 au poignet de la main libre. Avant le
-match, il choisit dans une liste les joueurs et celui qui sert en premier. Entre
+match, il indique le format et qui sert en premier, en quelques taps. Entre
 deux échanges, en sueur et la raquette dans l'autre main, il tape une moitié de
 l'écran pour donner le point à son camp ou au camp adverse. La montre affiche le
 score, qui sert et depuis quelle case. Si un point est mal saisi, il l'annule d'un
@@ -46,16 +46,16 @@ manipulation sur le simulateur ou la montre).
    est persisté à chaque point et proposé à la reprise au relancement.
 10. **Arrêter** un match avant la fin : il est sauvegardé avec le statut
     `interrompu`.
-11. **Liste de joueurs** : créer, renommer et supprimer des joueurs sur la montre
-    (dictée, scribble ou clavier). Le joueur « Moi » existe toujours et ne se
-    supprime pas.
-12. **Historique** : la liste des matchs passés (date, joueurs, score par set,
+11. **Historique** : la liste des matchs passés (date, joueurs, score par set,
     statut).
 
 ## Hors périmètre
 
 - Stats et moyennes (pourcentage au service, séries, bilan par adversaire). Le
   journal point par point est conçu pour les calculer plus tard.
+- Noms des joueurs (liste de joueurs, choix au démarrage). Abandonné après test
+  en match : chaque tap avant le match coûte sur le terrain. Les joueurs restent
+  Moi, Partenaire, Adv. 1 et Adv. 2 (voir Règles métier, « Joueurs »).
 - App iPhone compagnon, synchro iCloud, export.
 - Formats autres que le 3×15 et le 5 points en simple dans l'UI (3×21, 5×11,
   formats libres, 5 points en double). Le moteur les accepte déjà en paramètre,
@@ -167,8 +167,7 @@ HealthKit est bien signé avec une équipe personnelle au premier déploiement.
   (refuser revient à l'arrêter : il passe `interrompu`).
 - Séance HealthKit : à la reprise, la séance laissée active par le plantage est
   récupérée ; si la reprise est refusée, elle est terminée et enregistrée.
-- Joueurs : sauvegardés par rôle (Moi, Partenaire, Adv. 1, Adv. 2) en attendant la
-  liste de joueurs.
+- Joueurs : sauvegardés par rôle (Moi, Partenaire, Adv. 1, Adv. 2).
 - Matchs en 5 points : jamais sauvegardés, jamais proposés.
 
 ### Positions à l'écran
@@ -206,14 +205,16 @@ HealthKit est bien signé avec une équipe personnelle au premier déploiement.
 
 ### Joueurs
 
-- Un nom est obligatoire. Les espaces de début et de fin sont retirés, et un nom
-  ne peut pas être en double, sans tenir compte de la casse : « Lucas » et
-  « lucas » sont considérés comme le même nom, ce qui est refusé.
-- Un même joueur ne peut pas figurer deux fois dans un match.
-- Supprimer un joueur le retire de la liste de sélection. Il reste dans
-  l'historique, sous son nom, pour les matchs auxquels il a participé.
-- « Moi » est toujours présent dans mon camp, n'est jamais supprimable et ne
-  s'affiche pas dans la liste de sélection des adversaires.
+- Pas de noms : Moi, Partenaire (en double), Adversaire (en simple), Adv. 1 et
+  Adv. 2 (en double).
+- Convention pour savoir qui est Adv. 1 sans rien saisir (Découpage n°8), au
+  **premier set** uniquement :
+  - mon camp sert le premier échange : **Adv. 1 est celui qui le reçoit** (en
+    diagonale du serveur) ; l'app ne demande plus le receveur ;
+  - le camp adverse sert : **Adv. 1 est celui qui sert** ; l'app demande seulement
+    qui reçoit chez nous (Moi ou Partenaire).
+- À partir du 2e set, Adv. 1 et Adv. 2 restent les mêmes personnes qu'au 1er set :
+  le choix du serveur et du receveur se fait comme avant.
 
 ## Découpage
 
@@ -235,6 +236,8 @@ Une tranche verticale par `/feature`, dans cet ordre. ✅ = livrée.
    `interrompu`, arrêt anticipé, reprise d'un match en cours au relancement
    (hors matchs en 5 points, qui ne sont jamais proposés à la reprise).
 7. ✅ **Pause et changement de côté** à 8 points : retour haptique et message.
-8. **Liste de joueurs** : création, renommage et suppression, puis sélection
-   au démarrage d'un match à la place de « Adversaire ».
+8. **Convention Adv. 1** (remplace la liste de joueurs, abandonnée) : au premier
+   set d'un double, Adv. 1 est l'adversaire qui reçoit (si mon camp sert) ou qui
+   sert (si les adversaires servent) ; une question de moins au démarrage, et un
+   rappel de la convention à l'écran.
 9. **Historique** des matchs.
