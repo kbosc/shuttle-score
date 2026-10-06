@@ -53,6 +53,10 @@ réels.
   gauche apparaît à droite de l'écran. Le serveur est en gras avec l'icône, le receveur
   souligné.
 - **↶ annule** le dernier point, sans limite. **■ arrête** le match (avec confirmation).
+- **Sur Apple Watch Ultra, le bouton Action marque aussi** : une fois ShuttleScore choisi
+  dans Réglages → Bouton Action (« Match de badminton »), chaque appui pendant le match
+  donne le point au camp du porteur de la montre, sans regarder l'écran. Hors match, il
+  ouvre l'app. Les points adverses et l'annulation restent à l'écran.
 
 ### Les règles, appliquées automatiquement
 

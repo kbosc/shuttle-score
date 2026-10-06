@@ -71,6 +71,13 @@ VStack(spacing: 0) {
 `VStack` correspond à un `flex-direction: column`. Le dernier argument entre accolades est
 une **closure**, l'équivalent d'un `onClick={() => score("opponent")}`.
 
+Sur Apple Watch Ultra, le **bouton Action** produit le même effet. Un appui exécute une
+*App Intent* (`ShuttleScore/ActionButtonIntents.swift`), une petite action que le système
+peut lancer hors de l'interface. Elle ne fait que signaler l'appui à un relais observé par
+l'écran de match (`ActionButtonPresses`), qui appelle alors le même `score(.me)` qu'un tap.
+Renvoyer `.result(actionButtonIntent: …)` indique à watchOS quelle action exécuter à
+l'appui suivant.
+
 ## 2. Le point s'ajoute au journal
 
 Un match n'est pas un score qu'on incrémente : c'est un **journal d'événements**, comme une
