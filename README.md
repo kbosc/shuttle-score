@@ -5,7 +5,7 @@
 <h1 align="center">ShuttleScore</h1>
 
 <p align="center">
-  Le score de tes matchs de badminton au poignet, les stats sur ton iPhone.<br>
+  Le score d'un match de badminton au poignet, les stats sur l'iPhone.<br>
   <a href="https://github.com/kbosc/shuttle-score/actions/workflows/ci.yml"><img src="https://github.com/kbosc/shuttle-score/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 </p>
 
@@ -17,6 +17,10 @@ la montre applique les règles officielles et affiche qui sert et où chacun doi
 placer. Après le match, l'**app iPhone** reçoit tout, point par point, pour l'historique
 et les stats.
 
+Projet personnel, né d'un besoin au club et façonné par des retours de terrain : les
+positions à l'écran, le format 5 points ou la convention Adv. 1 sont venus de matchs
+réels.
+
 > La montre sert au match, l'iPhone à tout le reste.
 
 ## Sur la montre
@@ -27,9 +31,9 @@ et les stats.
 
 - **Simple** (en 3×15 ou en **5 points**, pour un petit match à trois en attendant un
   terrain) ou **double**.
-- On indique qui sert. En double, une **convention** évite de demander le receveur :
-  *Adv. 1, c'est celui qui reçoit le premier service* (ou qui le sert, si ce sont les
-  adversaires qui commencent). Le rappel s'affiche à l'écran.
+- Il suffit d'indiquer qui sert. En double, une **convention** évite de demander le
+  receveur : *Adv. 1, c'est celui qui reçoit le premier service* (ou qui le sert, si ce
+  sont les adversaires qui commencent). Le rappel s'affiche à l'écran.
 
 <br clear="right">
 
@@ -41,14 +45,16 @@ et les stats.
   <img src="docs/screenshots/watch-double.png" width="200" alt="Match en double : Adv. 2 sert, Adv. 1 et Adv. 2 placés dans leur case, Moi et Partenaire en bas">
 </p>
 
-- **Moitié basse = mon point, moitié haute = le leur.** De grandes zones, pensées pour
-  un doigt en sueur, et une vibration à chaque point pour ne pas avoir à regarder.
-- **Le camp au service est en vert-jaune.** Chaque joueur est affiché **dans sa case,
-  vu depuis ta place** : les adversaires sont en miroir, leur case gauche apparaît à ta
-  droite. Le serveur est en gras avec l'icône, le receveur souligné.
+- **Moitié basse : point pour le camp du porteur de la montre (« Moi ») ; moitié haute :
+  point pour les adversaires.** De grandes zones, pensées pour un doigt en sueur, et une
+  vibration à chaque point pour ne pas avoir à regarder l'écran.
+- **Le camp au service est en vert-jaune.** Chaque joueur est affiché **dans sa case, vu
+  depuis la place du porteur de la montre** : les adversaires sont en miroir, leur case
+  gauche apparaît à droite de l'écran. Le serveur est en gras avec l'icône, le receveur
+  souligné.
 - **↶ annule** le dernier point, sans limite. **■ arrête** le match (avec confirmation).
 
-### Les règles, appliquées pour toi
+### Les règles, appliquées automatiquement
 
 <p>
   <img src="docs/screenshots/watch-pause.png" width="200" alt="Message « Pause » à 8 points">
@@ -75,7 +81,7 @@ et les stats.
   est proposé à la reprise au lancement suivant.
 - **Une séance « Badminton » Santé** tourne pendant le match : elle garde l'app à
   l'écran entre les échanges et enregistre calories et fréquence cardiaque.
-- Les matchs en 5 points ne sont jamais sauvegardés : ils sont juste pour le fun.
+- Les matchs en 5 points ne sont jamais sauvegardés : ce sont des matchs pour le plaisir.
 
 <br clear="right">
 
@@ -92,15 +98,15 @@ et les stats.
 - **Historique** : chaque match terminé ou arrêté arrive tout seul depuis la montre,
   même si l'iPhone n'était pas à portée au moment du match. Glisser vers la gauche pour
   supprimer un match.
-- **Noms après coup** : toucher un match pour nommer son partenaire et ses adversaires,
+- **Noms après coup** : toucher un match pour nommer le partenaire et les adversaires,
   si on s'en souvient. Les noms déjà utilisés sont proposés, et ils ne quittent jamais
-  l'iPhone.
+  l'iPhone (ni montre, ni serveur).
 - **Stats** :
   - victoires, défaites et réussite ;
   - évolution par semaine ;
   - pourcentage de points gagnés au service et à la réception ;
   - simple contre double ;
-  - bilan **par joueur** : avec lui et contre lui.
+  - bilan **par joueur** : victoires, défaites et points, avec lui et contre lui.
 
 ## Comment c'est construit
 
@@ -126,7 +132,12 @@ flowchart LR
 - **`ShuttleScore/`** et **`ShuttleScorePhone/`** : les deux apps SwiftUI, aussi fines
   que possible.
 
-Les règles détaillées, avec des exemples chiffrés, sont dans **[SPEC.md](SPEC.md)**.
+Pour aller plus loin :
+
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** suit le trajet d'un point, du tap sur
+  la montre jusqu'aux graphiques de l'iPhone, avec des extraits de code et des
+  équivalences SwiftUI ↔ React pour les développeurs web.
+- **[SPEC.md](SPEC.md)** détaille toutes les règles, avec des exemples chiffrés.
 
 ## Développer
 
