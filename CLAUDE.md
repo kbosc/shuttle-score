@@ -86,3 +86,8 @@ features sont dans `SPEC.md` : c'est la référence, ne la recopie pas ici.
   — « free provisioning profile … not allowed to be installed from this source ». Elle
   ne s'installe que directement depuis Xcode (schéma `ShuttleScore`, destination la
   montre). L'app iPhone, elle, s'installe normalement par câble.
+- Après un `git pull` ou l'ajout de fichiers, le `.xcodeproj` ouvert dans Xcode peut
+  rester sur l'ancienne liste de fichiers (« Cannot find … in scope ») : fermer Xcode,
+  `make project`, rouvrir.
+- Les captures de `docs/screenshots/` (README) viennent des tests UI : relancer
+  `make ui-test` / `make ui-test-phone` et les exporter du `.xcresult` pour les mettre à jour.
