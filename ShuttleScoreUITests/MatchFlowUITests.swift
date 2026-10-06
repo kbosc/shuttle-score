@@ -306,6 +306,26 @@ final class MatchFlowUITests: XCTestCase {
         if announcement.exists { announcement.tap() }
     }
 
+    /// Un appui sur le bouton Action (simulé : le vrai bouton ne se teste pas sur simulateur)
+    /// vaut un tap sur la moitié basse ; pendant la pause, il ferme le message sans marquer.
+    @MainActor
+    func testAnActionButtonPressScoresForMyTeamLikeATap() {
+        let app = launchApp()
+        startSingles(app, rules: "official")
+        let press = app.buttons["debug.actionButton"]
+        XCTAssertTrue(press.waitForExistence(timeout: 5))
+
+        press.tap()
+        XCTAssertEqual(app.staticTexts["match.score.me"].label, "1")
+        for _ in 0..<7 { press.tap() }
+        let announcement = app.buttons["match.announcement"]
+        XCTAssertTrue(announcement.waitForExistence(timeout: 3))
+
+        press.tap()
+        XCTAssertTrue(announcement.waitForNonExistence(timeout: 3))
+        XCTAssertEqual(app.staticTexts["match.score.me"].label, "8")
+    }
+
     @MainActor
     private func startSingles(_ app: XCUIApplication, rules: String) {
         app.buttons["setup.format.singles"].tap()

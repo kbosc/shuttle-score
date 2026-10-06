@@ -36,6 +36,16 @@ struct RootView: View {
 
     var body: some View {
         content
+            .overlay(alignment: .topLeading) {
+                // Tests UI seulement : simule un appui sur le bouton Action, que le
+                // simulateur ne permet pas d'attribuer à l'app.
+                if ProcessInfo.processInfo.arguments.contains("-UITests") {
+                    Button("Bouton Action") { ActionButtonPresses.shared.press() }
+                        .frame(width: 30, height: 30)
+                        .opacity(0.02)
+                        .accessibilityIdentifier("debug.actionButton")
+                }
+            }
             // Au lancement : une séance orpheline (pas de match à reprendre) est terminée.
             .task { await workout.appLaunched(withMatchToResume: pendingResume != nil) }
             // Pause de la séance à la fin du match, reprise si une annulation le rouvre.

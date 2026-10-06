@@ -33,6 +33,15 @@ struct MatchView: View {
                 AnnouncementOverlay(announcement: announcement) { shownAnnouncement = nil }
             }
         }
+        // Bouton Action de l'Ultra : un appui pendant le match vaut un tap sur la moitié basse.
+        // Comme un tap : pendant l'annonce de pause, l'appui ferme le message sans marquer.
+        .onChange(of: ActionButtonPresses.shared.count) {
+            if shownAnnouncement != nil {
+                shownAnnouncement = nil
+            } else if ActionButtonEffect.of(match) == .scorePointForMyTeam {
+                score(.me)
+            }
+        }
         .task(id: shownAnnouncement) {
             guard shownAnnouncement != nil else { return }
             try? await Task.sleep(for: .seconds(5))

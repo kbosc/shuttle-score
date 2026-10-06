@@ -91,3 +91,7 @@ features sont dans `SPEC.md` : c'est la référence, ne la recopie pas ici.
   `make project`, rouvrir.
 - Les captures de `docs/screenshots/` (README) viennent des tests UI : relancer
   `make ui-test` / `make ui-test-phone` et les exporter du `.xcresult` pour les mettre à jour.
+- Bouton Action : `ShuttleScore/ActionButtonIntents.swift` (App Intents) ne fait que
+  relayer l'appui à `ActionButtonPresses` (ShuttleCore) ; la règle est dans
+  `ActionButtonEffect`. Le vrai bouton ne se teste que sur la montre (le simulateur ne
+  permet pas de choisir l'app du bouton).

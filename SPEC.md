@@ -74,7 +74,7 @@ manipulation sur le simulateur ou la montre).
 - Formats autres que le 3×15 et le 5 points en simple dans l'UI (3×21, 5×11,
   formats libres, 5 points en double). Le moteur les accepte déjà en paramètre,
   mais aucun écran ne permet de les choisir.
-- Saisie par le bouton Action de l'Ultra, complications, Smart Stack.
+- Complications, Smart Stack, geste « Double tap ».
 - Matchs où Kévin ne joue pas (« Moi » est toujours dans un camp).
 - Fautes, lets, cartons et durée des pauses (aucun minuteur de 60 s).
 
@@ -186,6 +186,22 @@ HealthKit est bien signé avec une équipe personnelle au premier déploiement.
   récupérée ; si la reprise est refusée, elle est terminée et enregistrée.
 - Joueurs : sauvegardés par rôle (Moi, Partenaire, Adv. 1, Adv. 2).
 - Matchs en 5 points : jamais sauvegardés, jamais proposés.
+
+### Bouton Action (Apple Watch Ultra)
+
+- Réglage par le joueur : Réglages → Bouton Action → ShuttleScore (« Match de
+  badminton »).
+- Hors match : un appui ouvre l'app sur l'écran de démarrage.
+- Pendant un match : chaque appui donne le point à mon camp, exactement comme un tap
+  sur la moitié basse (même vibration, même annonce de pause à 8). Pendant l'annonce
+  « Pause », l'appui ferme le message sans marquer, comme un tap. Le 1er appui d'un
+  match démarré depuis l'écran marque aussi (il passe par l'action « démarrer un
+  match », qui transmet l'appui).
+- Ignoré quand le match est terminé ou quand le service du set reste à choisir.
+- Les points adverses et l'annulation restent à l'écran (un seul bouton).
+- Limite de watchOS : l'enchaînement des appuis n'existe que pendant une séance
+  d'entraînement active. La séance démarrant avec le match, c'est le cas pendant tout
+  le match ; si l'accès à Santé est refusé, le bouton ne fait qu'ouvrir l'app.
 
 ### Positions à l'écran
 
