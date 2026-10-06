@@ -126,14 +126,45 @@ import Testing
             singlesWin.id: [.opponent1: "Marc"],
             interrupted.id: [.opponent1: "Léa"],
         ]
+        let players = MatchStats.byPlayer(records, names: names)
+        // Léa n'apparaît que dans un match interrompu sans aucun point : pas d'entrée.
+        #expect(players.map(\.name) == ["Marc", "Lucas"])
+        #expect(players.map(\.with) == [WinLoss(wins: 0, losses: 0), WinLoss(wins: 1, losses: 0)])
         #expect(
-            MatchStats.byPlayer(records, names: names) == [
-                PlayerRecord(
-                    name: "Marc", with: WinLoss(wins: 0, losses: 0),
-                    against: WinLoss(wins: 2, losses: 1)),
-                PlayerRecord(
-                    name: "Lucas", with: WinLoss(wins: 1, losses: 0),
-                    against: WinLoss(wins: 0, losses: 1)),
+            players.map(\.against) == [WinLoss(wins: 2, losses: 1), WinLoss(wins: 0, losses: 1)])
+    }
+
+    @Test func pointsWithAndAgainstIncludeInterruptedMatches() {
+        // Double interrompu. Échanges : je sers et gagne, je sers et perds, l'adversaire sert
+        // et perd, mon camp sert et gagne → service 2/3, réception 1/1.
+        var match = Match(doublesFirstService: .firstDoublesService(myTeamServer: .me))
+        for side: Side in [.me, .opponent, .me, .me] { match.recordRally(wonBy: side) }
+        let players = MatchStats.byPlayer(
+            [MatchRecord(match: match, status: .interrupted)],
+            names: [match.id: [.partner: "Paul", .opponent1: "Léa"]])
+        let split = PointSplit(
+            serve: PointRate(won: 2, played: 3), receive: PointRate(won: 1, played: 1))
+        let none = WinLoss(wins: 0, losses: 0)
+        #expect(
+            players == [
+                PlayerRecord(name: "Léa", with: none, against: none, againstPoints: split),
+                PlayerRecord(name: "Paul", with: none, against: none, withPoints: split),
             ])
+    }
+
+    @Test func pointsAddUpAcrossMatchesWithTheSamePerson() {
+        let win = finished(won: true)
+        let loss = finished(won: false)
+        let players = MatchStats.byPlayer(
+            [
+                MatchRecord(match: win, status: .finished),
+                MatchRecord(match: loss, status: .finished),
+            ],
+            names: [win.id: [.opponent1: "Marc"], loss.id: [.opponent2: "marc"]])
+        // Victoire : 30 échanges servis et gagnés par mon camp. Défaite : je sers le 1er
+        // échange et le perds, puis l'adversaire sert les 29 autres et les gagne.
+        #expect(players.count == 1)
+        #expect(players.first?.againstPoints.serve == PointRate(won: 30, played: 31))
+        #expect(players.first?.againstPoints.receive == PointRate(won: 0, played: 29))
     }
 }

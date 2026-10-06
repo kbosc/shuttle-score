@@ -44,7 +44,9 @@ struct StatsView: View {
                     } header: {
                         Text("Par joueur")
                     } footer: {
-                        Text("Matchs terminés où le joueur est nommé.")
+                        Text(
+                            "Victoires et défaites : matchs terminés. Points de mon camp : "
+                                + "matchs terminés et interrompus où le joueur est nommé.")
                     }
                 }
             }
@@ -53,27 +55,34 @@ struct StatsView: View {
     }
 }
 
-/// Bilan avec et contre une personne.
+/// Bilan avec et contre une personne : victoires et défaites, puis points de mon camp.
 private struct PlayerRow: View {
     let player: PlayerRecord
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(player.name).font(.headline)
-            HStack {
-                if player.with.wins + player.with.losses > 0 {
-                    Text("avec \(player.with.wins) V – \(player.with.losses) D")
-                }
-                if player.against.wins + player.against.losses > 0 {
-                    Text("contre \(player.against.wins) V – \(player.against.losses) D")
-                }
-            }
-            .font(.subheadline.monospacedDigit())
-            .foregroundStyle(.secondary)
+            line("avec", record: player.with, points: player.withPoints)
+            line("contre", record: player.against, points: player.againstPoints)
         }
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("stats.player.\(player.name)")
     }
+
+    /// « contre 1 V – 0 D · service 100 % · réception — », si la personne a joué ce rôle.
+    @ViewBuilder
+    private func line(_ role: String, record: WinLoss, points: PointSplit) -> some View {
+        if record.wins + record.losses + points.serve.played + points.receive.played > 0 {
+            Text(
+                "\(role) \(record.wins) V – \(record.losses) D · service \(rate(points.serve)) · "
+                    + "réception \(rate(points.receive))"
+            )
+            .font(.subheadline.monospacedDigit())
+            .foregroundStyle(.secondary)
+        }
+    }
+
+    private func rate(_ rate: PointRate) -> String { rate.rate.map(percent) ?? "—" }
 }
 
 /// Victoires, défaites et part de victoires, en gros chiffres.

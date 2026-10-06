@@ -51,6 +51,8 @@ final class PlayerNamesUITests: XCTestCase {
         if !lucas.waitForExistence(timeout: 3) { app.swipeUp() }
         XCTAssertTrue(lucas.waitForExistence(timeout: 5))
         XCTAssertTrue(lucas.label.contains("contre 1 V – 0 D"), lucas.label)
+        // Contre Lucas, j'ai servi et gagné les 30 échanges du simple.
+        XCTAssertTrue(lucas.label.contains("service 100"), lucas.label)
 
         let shot = XCTAttachment(screenshot: app.screenshot())
         shot.name = "Stats par joueur"

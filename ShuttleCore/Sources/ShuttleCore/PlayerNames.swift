@@ -104,18 +104,42 @@ extension PlayerDirectory {
     }
 }
 
-/// Bilan avec ou contre une personne, sur les matchs terminés où elle est nommée.
+/// Points de mon camp au service et à la réception sur un ensemble de matchs.
+public struct PointSplit: Equatable, Sendable {
+    public var serve: PointRate
+    public var receive: PointRate
+
+    public init(serve: PointRate, receive: PointRate) {
+        self.serve = serve
+        self.receive = receive
+    }
+
+    public static let none = PointSplit(
+        serve: PointRate(won: 0, played: 0), receive: PointRate(won: 0, played: 0))
+}
+
+/// Bilan avec ou contre une personne : victoires et défaites sur les matchs terminés,
+/// points sur les matchs terminés et interrompus où elle est nommée.
 public struct PlayerRecord: Equatable, Sendable {
     public let name: String
     /// Matchs où elle était mon partenaire.
     public let with: WinLoss
     /// Matchs où elle était mon adversaire.
     public let against: WinLoss
+    /// Points de mon camp quand elle était mon partenaire.
+    public let withPoints: PointSplit
+    /// Points de mon camp quand elle était mon adversaire.
+    public let againstPoints: PointSplit
 
-    public init(name: String, with: WinLoss, against: WinLoss) {
+    public init(
+        name: String, with: WinLoss, against: WinLoss, withPoints: PointSplit = .none,
+        againstPoints: PointSplit = .none
+    ) {
         self.name = name
         self.with = with
         self.against = against
+        self.withPoints = withPoints
+        self.againstPoints = againstPoints
     }
 }
 
@@ -127,29 +151,76 @@ extension MatchStats {
         var spelling: [String: String] = [:]
         var with: [String: WinLoss] = [:]
         var against: [String: WinLoss] = [:]
+        var withPoints: [String: PointSplit] = [:]
+        var againstPoints: [String: PointSplit] = [:]
         for record in records {
-            guard record.status == .finished, let winner = record.match.state.winner,
-                let matchNames = names[record.match.id]
-            else { continue }
+            guard let matchNames = names[record.match.id] else { continue }
+            // Victoires et défaites : matchs terminés ; points : terminés et interrompus.
+            let winner = record.status == .finished ? record.match.state.winner : nil
+            let points = PointSplit(record.match)
             for (role, rawName) in matchNames where role != .me {
                 guard let name = PlayerNames.normalized(rawName) else { continue }
                 let key = PlayerNames.key(name)
                 if spelling[key] == nil { spelling[key] = name }
-                var tally =
-                    (role.side == .me ? with[key] : against[key]) ?? WinLoss(wins: 0, losses: 0)
+                let isPartner = role.side == .me
+                if isPartner {
+                    withPoints[key, default: .none].add(points)
+                } else {
+                    againstPoints[key, default: .none].add(points)
+                }
+                guard let winner else { continue }
+                var tally = (isPartner ? with[key] : against[key]) ?? WinLoss(wins: 0, losses: 0)
                 if winner == .me { tally.wins += 1 } else { tally.losses += 1 }
-                if role.side == .me { with[key] = tally } else { against[key] = tally }
+                if isPartner { with[key] = tally } else { against[key] = tally }
             }
         }
         let empty = WinLoss(wins: 0, losses: 0)
         return spelling.map { key, name in
-            PlayerRecord(name: name, with: with[key] ?? empty, against: against[key] ?? empty)
+            PlayerRecord(
+                name: name, with: with[key] ?? empty, against: against[key] ?? empty,
+                withPoints: withPoints[key] ?? .none, againstPoints: againstPoints[key] ?? .none)
         }
+        // Pas d'entrée sans match terminé ni point joué.
+        .filter { $0.finishedMatches > 0 || $0.pointsPlayed > 0 }
         .sorted { lhs, rhs in
-            let left = lhs.with.wins + lhs.with.losses + lhs.against.wins + lhs.against.losses
-            let right = rhs.with.wins + rhs.with.losses + rhs.against.wins + rhs.against.losses
-            return left != right
-                ? left > right : lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
+            lhs.finishedMatches != rhs.finishedMatches
+                ? lhs.finishedMatches > rhs.finishedMatches
+                : lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
         }
+    }
+}
+
+extension PlayerRecord {
+    fileprivate var finishedMatches: Int {
+        with.wins + with.losses + against.wins + against.losses
+    }
+
+    fileprivate var pointsPlayed: Int {
+        withPoints.serve.played + withPoints.receive.played + againstPoints.serve.played
+            + againstPoints.receive.played
+    }
+}
+
+extension PointSplit {
+    /// Points de mon camp dans un match, d'après le serveur de chaque échange.
+    init(_ match: Match) {
+        self = .none
+        for rally in match.rallyRecords {
+            let won = rally.winner == .me
+            if rally.server.side == .me {
+                serve.played += 1
+                if won { serve.won += 1 }
+            } else {
+                receive.played += 1
+                if won { receive.won += 1 }
+            }
+        }
+    }
+
+    mutating func add(_ other: PointSplit) {
+        serve.won += other.serve.won
+        serve.played += other.serve.played
+        receive.won += other.receive.won
+        receive.played += other.receive.played
     }
 }

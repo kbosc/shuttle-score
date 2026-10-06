@@ -273,7 +273,11 @@ HealthKit est bien signé avec une équipe personnelle au premier déploiement.
   refusé avec un message.
 - Bilan par joueur (dans les stats) : victoires et défaites **avec** la personne
   (partenaire) et **contre** elle (adversaire), sur les matchs terminés où elle est
-  nommée.
+  nommée ; et points gagnés par mon camp au service et à la réception, avec et contre
+  elle, sur les matchs terminés **et interrompus** où elle est nommée.
+  - Exemple : contre Lucas, un simple gagné 15-0 15-0 où j'ai servi les 30 échanges →
+    contre 1 V – 0 D · service 100 % · réception —.
+- Une personne apparaît dans le bilan dès qu'elle a un match terminé ou un point joué.
 
 ## Découpage
 
