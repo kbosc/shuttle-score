@@ -10,3 +10,4 @@ xcuserdata/
 # Généré par XcodeGen depuis project.yml
 ShuttleScore/ShuttleScore.entitlements
 ShuttleScore/Info.plist
+*.xcresult

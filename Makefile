@@ -39,13 +39,14 @@ app: project
 	xcodebuild build -project ShuttleScore.xcodeproj -scheme ShuttleScorePhone \
 		-destination 'generic/platform=iOS Simulator' -derivedDataPath .build/xcode -quiet
 
-## ui-test : tests de bout en bout sur simulateur watchOS (lent, lancé en CI)
+## ui-test : tests de bout en bout sur simulateur watchOS (lent, lancé en CI).
+## RESULT_BUNDLE=chemin.xcresult garde le rapport complet (erreurs, captures).
 ui-test: project
 	xcrun simctl bootstatus $(WATCH_SIM) -b > /dev/null
 	# Le simulateur est éteint à la fin, même en cas d'échec : laissé allumé après un
 	# plantage, il peut boucler en arrière-plan (rapports « SpringBoard a quitté »).
 	xcodebuild test -project ShuttleScore.xcodeproj -scheme ShuttleScore \
-		-destination 'id=$(WATCH_SIM)' -quiet; \
+		-destination 'id=$(WATCH_SIM)' -quiet $(if $(RESULT_BUNDLE),-resultBundlePath $(RESULT_BUNDLE)); \
 		status=$$?; xcrun simctl shutdown $(WATCH_SIM); exit $$status
 
 ## ui-test-phone : tests de bout en bout de l'app iPhone sur simulateur (lent, lancé en CI)
@@ -54,5 +55,5 @@ ui-test-phone: project
 	# sinon le délai de l'exécuteur de tests.
 	xcrun simctl bootstatus $(PHONE_SIM) -b > /dev/null
 	xcodebuild test -project ShuttleScore.xcodeproj -scheme ShuttleScorePhone \
-		-destination 'id=$(PHONE_SIM)' -quiet; \
+		-destination 'id=$(PHONE_SIM)' -quiet $(if $(RESULT_BUNDLE),-resultBundlePath $(RESULT_BUNDLE)); \
 		status=$$?; xcrun simctl shutdown $(PHONE_SIM); exit $$status

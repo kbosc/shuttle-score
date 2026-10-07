@@ -39,10 +39,11 @@ struct RootView: View {
             .overlay(alignment: .topLeading) {
                 // Tests UI seulement : simule un appui sur le bouton Action, que le
                 // simulateur ne permet pas d'attribuer à l'app.
+                // Visible : XCUITest (Xcode 26) ne touche pas un élément quasi transparent.
                 if ProcessInfo.processInfo.arguments.contains("-UITests") {
-                    Button("Bouton Action") { ActionButtonPresses.shared.press() }
+                    Button("AB") { ActionButtonPresses.shared.press() }
+                        .font(.caption2)
                         .frame(width: 30, height: 30)
-                        .opacity(0.02)
                         .accessibilityIdentifier("debug.actionButton")
                 }
             }

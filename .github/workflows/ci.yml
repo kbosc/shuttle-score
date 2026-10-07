@@ -25,5 +25,12 @@ jobs:
           xcode-version: latest-stable
       - run: brew install xcodegen
       - run: make app
-      - run: make ui-test
-      - run: make ui-test-phone
+      # Rapports complets des tests UI (messages d'erreur, captures), joints au run en cas
+      # d'échec : `-quiet` n'affiche que le nom des tests qui échouent.
+      - run: make ui-test RESULT_BUNDLE=ui-watch.xcresult
+      - run: make ui-test-phone RESULT_BUNDLE=ui-phone.xcresult
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapports-tests-ui
+          path: "*.xcresult"
